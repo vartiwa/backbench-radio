@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://backbench-radio.vercel.app/sitemap.xml

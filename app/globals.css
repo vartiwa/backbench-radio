@@ -1,0 +1,393 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #12141c;
+  --color-corridor: #1c2030;
+  --color-amber: #e8a34a;
+  --color-rose: #c9776a;
+  --color-fog: #9aa3b5;
+  --color-paper: #ece6da;
+
+  --font-display: "Newsreader", "Georgia", serif;
+  --font-body: "Inter", "Helvetica Neue", sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", monospace;
+  --font-anton: "Anton", "Impact", sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+  background-color: #0b0c10;
+  color: var(--color-paper);
+}
+
+body {
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+.hero-bg {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: opacity 700ms cubic-bezier(0.4, 0, 0.2, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 0;
+}
+
+.hero-bg-campus {
+  background-image: url("/bg/scene-wide.png");
+}
+
+.hero-bg-street {
+  background-image: url("/bg/street-wide.png");
+}
+
+.hero-bg-classroom {
+  background-image: url("/bg/classroom-wide.png");
+}
+
+.hero-bg-hiphop {
+  background-image: url("/bg/hiphop-wide.jpg");
+}
+
+@media (orientation: portrait) {
+  .hero-bg-campus {
+    background-image: url("/bg/scene-tall.png");
+  }
+  .hero-bg-street {
+    background-image: url("/bg/street-tall.png");
+  }
+  .hero-bg-classroom {
+    background-image: url("/bg/scene-tall.png");
+  }
+  .hero-bg-hiphop {
+    background-image: url("/bg/hiphop-tall.jpg");
+  }
+}
+
+/* Subtle ambient flow animation on screen when music is playing */
+.music-playing-flow {
+  animation: subtle-flow 8s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+}
+
+@keyframes subtle-flow {
+  0% {
+    transform: scale(1) translateY(0);
+    filter: brightness(1) contrast(1);
+  }
+  50% {
+    transform: scale(1.018) translateY(-3px);
+    filter: brightness(1.06) contrast(1.02);
+  }
+  100% {
+    transform: scale(1.008) translateY(2px);
+    filter: brightness(1.02) contrast(1.01);
+  }
+}
+
+/* Subtle bass heartbeat pulse for title text when music is playing */
+.title-music-beat {
+  animation: subtle-beat 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes subtle-beat {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(1.012);
+    opacity: 1;
+  }
+}
+
+/* Theme overrides */
+[data-theme="street"] {
+  --color-amber: #f2c230;
+  --color-rose: #e63946;
+  --color-ink: #0b0b0d;
+  --color-corridor: #17171a;
+  --color-fog: #a9a9ad;
+}
+
+[data-theme="classroom"] {
+  --color-amber: #d4a373;
+  --color-rose: #bc6c25;
+  --color-ink: #0f1419;
+  --color-paper: #faedcd;
+}
+
+/* Fiery Stage Orange & Red Palette for Hip Hop Concert Theme */
+[data-theme="hiphop"] {
+  --color-amber: #ff5500;
+  --color-rose: #ff2200;
+  --color-ink: #070308;
+  --color-paper: #ffffff;
+}
+
+/* Concert Stage Stage Light Glow Overlay */
+[data-theme="hiphop"] .hero-bg-hiphop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 50% 45%, rgba(255, 85, 0, 0.3), transparent 60%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.35), transparent 45%, rgba(7, 3, 8, 0.88));
+  mix-blend-mode: color-dodge;
+  pointer-events: none;
+  animation: concert-light-glow 4s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+}
+
+@keyframes concert-light-glow {
+  0% {
+    opacity: 0.7;
+    filter: brightness(0.9) contrast(1.1);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    filter: brightness(1.3) contrast(1.2);
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1.5) contrast(1.3);
+    transform: scale(1.05);
+  }
+}
+
+[data-theme="street"] .grain-overlay,
+[data-theme="classroom"] .grain-overlay,
+[data-theme="hiphop"] .grain-overlay {
+  opacity: 0.25;
+}
+
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  mix-blend-mode: overlay;
+  opacity: 0.15;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  z-index: 0;
+}
+
+/* Audio Visualizer Equalizer Bar Animation */
+@keyframes eq-bar {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+
+.eq-bar-1 { animation: eq-bar 0.8s ease-in-out infinite; }
+.eq-bar-2 { animation: eq-bar 0.6s ease-in-out 0.2s infinite; }
+.eq-bar-3 { animation: eq-bar 0.9s ease-in-out 0.4s infinite; }
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.blink {
+  animation: blink 1s step-start infinite;
+}
+
+@keyframes spin-record {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.vinyl-disc-grooves {
+  background: 
+    radial-gradient(circle at center, transparent 32%, rgba(0, 0, 0, 0.95) 33%),
+    repeating-radial-gradient(circle at center, #111115 0px, #111115 1.5px, #1c1d24 2px, #0a0a0d 3px, #181920 4px);
+}
+
+.vinyl-anisotropic-sheen {
+  background: conic-gradient(
+    from 45deg at 50% 50%,
+    rgba(255, 255, 255, 0.15) 0deg,
+    rgba(255, 255, 255, 0.02) 40deg,
+    rgba(255, 255, 255, 0) 80deg,
+    rgba(255, 255, 255, 0.02) 130deg,
+    rgba(255, 255, 255, 0.16) 180deg,
+    rgba(255, 255, 255, 0.02) 220deg,
+    rgba(255, 255, 255, 0) 270deg,
+    rgba(255, 255, 255, 0.02) 320deg,
+    rgba(255, 255, 255, 0.15) 360deg
+  );
+}
+
+.vinyl-spin {
+  animation: spin-record 3.2s linear infinite;
+  animation-play-state: paused;
+}
+
+.vinyl-spin[data-playing="true"] {
+  animation-play-state: running;
+}
+
+/* Scrollbar Utility */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom Scrollbar for Drawer & Popups */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-amber);
+}
+
+/* Styled Range Sliders */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 14px;
+  width: 14px;
+  border-radius: 50%;
+  background: var(--color-amber);
+  margin-top: -5px;
+  box-shadow: 0 0 10px var(--color-amber);
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  box-shadow: 0 0 15px var(--color-amber);
+}
+
+/* Firefox Range Slider */
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  height: 14px;
+  width: 14px;
+  border-radius: 50%;
+  background: var(--color-amber);
+  border: none;
+  box-shadow: 0 0 10px var(--color-amber);
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.25);
+  box-shadow: 0 0 15px var(--color-amber);
+}
+
+/* Premium Animations */
+.fade-in {
+  animation: fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in-right {
+  animation: slide-in-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.slide-in-up {
+  animation: slide-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.glow-pulse {
+  animation: glow-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1.2) drop-shadow(0 0 8px var(--color-amber));
+  }
+  50% {
+    opacity: 0.75;
+    filter: brightness(1) drop-shadow(0 0 2px var(--color-amber));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vinyl-spin,
+  .blink,
+  .eq-bar-1, 
+  .eq-bar-2, 
+  .eq-bar-3,
+  .concert-light-glow,
+  .fade-in,
+  .slide-in-right,
+  .slide-in-up,
+  .glow-pulse,
+  .music-playing-flow,
+  .title-music-beat {
+    animation: none !important;
+  }
+}
