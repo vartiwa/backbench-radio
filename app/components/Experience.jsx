@@ -215,8 +215,8 @@ export default function Experience() {
         );
       })()}
 
-      {/* Player Component */}
-      <div style={{ paddingBottom: edgeB }} className="w-full flex justify-center z-10">
+      {/* Bottom Player & Footer */}
+      <div style={{ paddingBottom: edgeB }} className="w-full flex flex-col items-center gap-2.5 z-10">
         <Player
           preferredPlaylistId={active.playlistId}
           onOpenPlaylists={() => setActiveModal('playlist')}
@@ -230,21 +230,22 @@ export default function Experience() {
           onRegisterHandlers={handleRegisterHandlers}
           onPlayStateChange={setIsPlaying}
         />
-      </div>
 
-      {/* Discreet Creator Credit */}
-      <div
-        className="fixed bottom-1.5 sm:bottom-2 right-3 sm:right-4 z-20 flex items-center gap-1.5 font-mono text-[9px] sm:text-[10px] tracking-wider text-paper/20 hover:text-paper/60 transition-colors select-none"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
-        <span>vartiwa</span>
-        <span className="opacity-30">·</span>
-        <a
-          href="mailto:varunt154@gmail.com"
-          className="hover:underline hover:text-amber transition-colors text-paper/25 hover:text-paper/70"
-        >
-          varunt154@gmail.com
-        </a>
+        {/* Discreet Bottom Center Footer */}
+        <p className="font-mono text-[10px] sm:text-[11px] tracking-wider text-paper/30 flex items-center gap-1.5 flex-wrap justify-center text-center px-4 select-none">
+          <span>© {new Date().getFullYear()} Backbench Radio</span>
+          <span className="opacity-30">·</span>
+          <span>All rights reserved</span>
+          <span className="opacity-30">·</span>
+          <a
+            href="https://github.com/vartiwa"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-paper/40 hover:text-amber transition-colors hover:underline"
+          >
+            Varun Tiwari
+          </a>
+        </p>
       </div>
 
       {/* Modals */}
