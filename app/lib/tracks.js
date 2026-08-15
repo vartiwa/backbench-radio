@@ -43,7 +43,6 @@ export const PLAYLISTS = [
     tracks: [
       { id: "fein", title: "FE!N", artist: "Travis Scott ft. Playboi Carti", year: 2023, duration: 191, audioUrl: "/audio/fein.mp3", mood: "hype-rap" },
       { id: "not-like-us", title: "Not Like Us", artist: "Kendrick Lamar", year: 2024, duration: 274, audioUrl: "/audio/not-like-us.mp3", mood: "westcoast-banger" },
-      { id: "hola-amigo", title: "Hola Amigo", artist: "KR$NA ft. Seedhe Maut", year: 2023, duration: 204, audioUrl: "/audio/hola-amigo.mp3", mood: "desi-cypher" },
       { id: "trap-praa", title: "TRAP PRAA", artist: "Raftaar x Prabh Deep", year: 2023, duration: 185, audioUrl: "/audio/trap-praa.mp3", mood: "heavy-808" },
     ],
   },
