@@ -232,6 +232,21 @@ export default function Experience() {
         />
       </div>
 
+      {/* Discreet Creator Credit */}
+      <div
+        className="fixed bottom-1.5 sm:bottom-2 right-3 sm:right-4 z-20 flex items-center gap-1.5 font-mono text-[9px] sm:text-[10px] tracking-wider text-paper/20 hover:text-paper/60 transition-colors select-none"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <span>vartiwa</span>
+        <span className="opacity-30">·</span>
+        <a
+          href="mailto:varunt154@gmail.com"
+          className="hover:underline hover:text-amber transition-colors text-paper/25 hover:text-paper/70"
+        >
+          varunt154@gmail.com
+        </a>
+      </div>
+
       {/* Modals */}
       <div className="z-50 relative">
         <PlaylistDrawer
