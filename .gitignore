@@ -12,8 +12,6 @@ out
 .env.test.local
 .env.production.local
 
-# Audio source files — keep out of version control (large + copyright)
-*.mp3
 
 # OS & editor noise
 .DS_Store
