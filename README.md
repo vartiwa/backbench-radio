@@ -1,6 +1,6 @@
 # 📻 Backbench Radio
 
-A nostalgic, atmospheric web radio built for focus, study, and quiet moments. Features curated playlists, ambient sound layering, multiple aesthetic moods, and a vintage turntable player.
+> **A nostalgic web radio for the back row.** Curated slow indie, acoustic, and hip-hop beats with ambient sound mixing, dynamic moods, and an animated vinyl turntable.
 
 ---
 
