@@ -7,8 +7,6 @@ const SHORTCUTS = [
   { key: "M", action: "Mute / Unmute" },
   { key: "→", action: "Next Track" },
   { key: "←", action: "Previous Track" },
-  { key: "L", action: "Favorite Track" },
-  { key: "P", action: "Toggle Playlists" },
   { key: "?", action: "Show Shortcuts" },
 ];
 
@@ -17,8 +15,6 @@ export default function KeyboardShortcuts({
   onToggleMute,
   onNextTrack,
   onPrevTrack,
-  onToggleFavorite,
-  onTogglePlaylists,
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -43,10 +39,6 @@ export default function KeyboardShortcuts({
         onNextTrack();
       } else if (e.key === "ArrowLeft") {
         onPrevTrack();
-      } else if (e.key.toLowerCase() === "l") {
-        onToggleFavorite();
-      } else if (e.key.toLowerCase() === "p") {
-        onTogglePlaylists();
       } else if (e.key === "?") {
         setIsOpen((prev) => !prev);
       }
@@ -54,7 +46,7 @@ export default function KeyboardShortcuts({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onTogglePlay, onToggleMute, onNextTrack, onPrevTrack, onToggleFavorite, onTogglePlaylists]);
+  }, [isOpen, onTogglePlay, onToggleMute, onNextTrack, onPrevTrack]);
 
   return (
     <>

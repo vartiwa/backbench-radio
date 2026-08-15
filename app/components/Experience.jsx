@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import Clock from "./Clock";
 import Player from "./Player";
 import ThemeToggle from "./ThemeToggle";
-import PlaylistDrawer from "./PlaylistDrawer";
 import AmbientMixer from "./AmbientMixer";
 import SleepTimer from "./SleepTimer";
 import KeyboardShortcuts from "./KeyboardShortcuts";
@@ -17,16 +16,14 @@ const edgeL = "max(1rem,env(safe-area-inset-left))";
 const edgeR = "max(1rem,env(safe-area-inset-right))";
 
 const STORAGE_KEY = "backbench-theme";
-const LIKES_KEY = "backbench-liked-songs";
 
 export default function Experience() {
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [currentTrackId, setCurrentTrackId] = useState(ALL_TRACKS[0].id);
-  const [likedTrackIds, setLikedTrackIds] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Modals state (mutual exclusion)
-  const [activeModal, setActiveModal] = useState(null); // 'playlist' | 'ambient' | 'timer' | null
+  const [activeModal, setActiveModal] = useState(null); // 'ambient' | 'timer' | null
   const [activeTimerSeconds, setActiveTimerSeconds] = useState(0);
 
   // Lifted ambient volumes state
@@ -39,9 +36,6 @@ export default function Experience() {
     try {
       const savedTheme = window.localStorage.getItem(STORAGE_KEY);
       if (savedTheme && THEMES[savedTheme]) setTheme(savedTheme);
-
-      const savedLikes = window.localStorage.getItem(LIKES_KEY);
-      if (savedLikes) setLikedTrackIds(JSON.parse(savedLikes));
     } catch (e) {
       console.error("Failed loading local storage preferences", e);
     }
@@ -54,20 +48,6 @@ export default function Experience() {
     } catch (e) {
       console.error("Failed saving theme preference", e);
     }
-  };
-
-  const handleToggleLike = (trackId) => {
-    setLikedTrackIds((prev) => {
-      const next = prev.includes(trackId)
-        ? prev.filter((id) => id !== trackId)
-        : [...prev, trackId];
-      try {
-        window.localStorage.setItem(LIKES_KEY, JSON.stringify(next));
-      } catch (e) {
-        console.error("Failed saving liked tracks", e);
-      }
-      return next;
-    });
   };
 
   const handleRegisterHandlers = useCallback((handlers) => {
@@ -133,8 +113,6 @@ export default function Experience() {
             onToggleMute={() => hotkeyHandlersRef.current.toggleMute?.()}
             onNextTrack={() => hotkeyHandlersRef.current.nextTrack?.()}
             onPrevTrack={() => hotkeyHandlersRef.current.prevTrack?.()}
-            onToggleFavorite={() => hotkeyHandlersRef.current.toggleFavorite?.()}
-            onTogglePlaylists={() => setActiveModal((prev) => prev === 'playlist' ? null : 'playlist')}
           />
         </div>
       </div>
@@ -219,14 +197,11 @@ export default function Experience() {
       <div style={{ paddingBottom: edgeB }} className="w-full flex flex-col items-center gap-2.5 z-10">
         <Player
           preferredPlaylistId={active.playlistId}
-          onOpenPlaylists={() => setActiveModal('playlist')}
           onOpenAmbient={() => setActiveModal('ambient')}
           onOpenSleepTimer={() => setActiveModal('timer')}
           activeTimerSeconds={activeTimerSeconds}
           currentTrackId={currentTrackId}
           setCurrentTrackId={setCurrentTrackId}
-          likedTrackIds={likedTrackIds}
-          onToggleLike={handleToggleLike}
           onRegisterHandlers={handleRegisterHandlers}
           onPlayStateChange={setIsPlaying}
         />
@@ -250,18 +225,6 @@ export default function Experience() {
 
       {/* Modals */}
       <div className="z-50 relative">
-        <PlaylistDrawer
-          isOpen={activeModal === 'playlist'}
-          onClose={() => setActiveModal(null)}
-          currentTrackId={currentTrackId}
-          onSelectTrack={(id) => {
-            setCurrentTrackId(id);
-            setActiveModal(null);
-          }}
-          likedTrackIds={likedTrackIds}
-          onToggleLike={handleToggleLike}
-        />
-
         <AmbientMixer 
           isOpen={activeModal === 'ambient'} 
           onClose={() => setActiveModal(null)} 
