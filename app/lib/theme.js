@@ -1,13 +1,4 @@
 export const THEMES = {
-  ghibli: {
-    id: "ghibli",
-    label: "Ghibli",
-    title: "Backbench Woods",
-    tagline: "enchanted canopy & quiet winds",
-    playlistId: "walking-back",
-    bgWide: "/bg/ghibli-forest.jpg",
-    bgTall: "/bg/ghibli-forest.jpg",
-  },
   campus: {
     id: "campus",
     label: "Campus",
@@ -21,10 +12,10 @@ export const THEMES = {
     id: "street",
     label: "Rainy Night",
     title: "Backbench Radio",
-    tagline: "same walk, after dark",
+    tagline: "enchanted rain & quiet woods",
     playlistId: "rainy-route",
-    bgWide: "/bg/street-wide.png",
-    bgTall: "/bg/street-tall.png",
+    bgWide: "/bg/ghibli-forest.jpg",
+    bgTall: "/bg/ghibli-forest.jpg",
   },
   classroom: {
     id: "classroom",
@@ -46,4 +37,4 @@ export const THEMES = {
   },
 };
 
-export const DEFAULT_THEME = "ghibli";
+export const DEFAULT_THEME = "street";

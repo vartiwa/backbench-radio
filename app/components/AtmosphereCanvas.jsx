@@ -53,8 +53,8 @@ export default function AtmosphereCanvas({ theme, isPlaying }) {
       clouds = [];
       sunbeams = [];
 
-      // 1. Clouds system (Ghibli & Nature themes)
-      const cloudCount = currentTheme === "ghibli" ? 8 : 4;
+      // 1. Clouds system (Ghibli Rainy Night & Nature themes)
+      const cloudCount = currentTheme === "street" ? 7 : currentTheme === "campus" ? 5 : 3;
       for (let i = 0; i < cloudCount; i++) {
         clouds.push({
           x: Math.random() * (width + 600) - 300,
@@ -69,15 +69,15 @@ export default function AtmosphereCanvas({ theme, isPlaying }) {
         });
       }
 
-      // 2. God Rays / Sunbeams (Komorebi)
-      const rayCount = currentTheme === "ghibli" ? 5 : currentTheme === "campus" ? 4 : 2;
+      // 2. God Rays / Moonbeams (Komorebi in Ghibli woods)
+      const rayCount = currentTheme === "street" ? 5 : currentTheme === "campus" ? 4 : 2;
       for (let i = 0; i < rayCount; i++) {
         sunbeams.push({
-          x: (width * 0.4) + (i - rayCount / 2) * (width * 0.18),
+          x: (width * 0.45) + (i - rayCount / 2) * (width * 0.18),
           topWidth: Math.random() * 40 + 20,
-          bottomWidth: Math.random() * 220 + 140,
-          angle: -0.22 + (i * 0.08),
-          baseOpacity: Math.random() * 0.12 + 0.08,
+          bottomWidth: Math.random() * 240 + 140,
+          angle: -0.2 + (i * 0.08),
+          baseOpacity: Math.random() * 0.13 + 0.07,
           pulseSpeed: Math.random() * 0.015 + 0.008,
           pulsePhase: Math.random() * Math.PI * 2,
         });
@@ -85,10 +85,8 @@ export default function AtmosphereCanvas({ theme, isPlaying }) {
 
       // 3. Particles
       const count =
-        currentTheme === "ghibli"
-          ? 65
-          : currentTheme === "street"
-          ? 140
+        currentTheme === "street"
+          ? 150
           : currentTheme === "campus"
           ? 45
           : currentTheme === "hiphop"
@@ -103,68 +101,54 @@ export default function AtmosphereCanvas({ theme, isPlaying }) {
     function createParticle(t, initialRandomY = false) {
       const startY = initialRandomY ? Math.random() * height : -20;
 
-      // ── Ghibli Enchanted Forest (Spirit Orbs, Petals & Spores) ──
-      if (t === "ghibli") {
+      // ── Rainy Night (Enchanted Ghibli Woods + Rain + Spirit Orbs) ──
+      if (t === "street") {
         const rand = Math.random();
-        if (rand < 0.45) {
-          // Kodama Forest Spirit Firefly / Glowing Orb
+        if (rand < 0.65) {
+          // Soft anime rain streak
+          return {
+            type: "rain",
+            x: Math.random() * (width + 200) - 100,
+            y: startY,
+            len: Math.random() * 26 + 16,
+            speed: Math.random() * 12 + 14,
+            thickness: Math.random() * 1.2 + 0.6,
+            opacity: Math.random() * 0.45 + 0.2,
+            slant: -3.2,
+          };
+        } else if (rand < 0.88) {
+          // Bioluminescent Forest Spirit Orb (Kodama Firefly)
           return {
             type: "spirit",
             x: Math.random() * width,
             y: initialRandomY ? Math.random() * height : height + 20,
             size: Math.random() * 3.5 + 1.8,
-            speedY: -(Math.random() * 0.8 + 0.4),
-            speedX: (Math.random() - 0.5) * 0.7,
+            speedY: -(Math.random() * 0.7 + 0.35),
+            speedX: (Math.random() - 0.5) * 0.6,
             wobble: Math.random() * Math.PI * 2,
             wobbleSpeed: Math.random() * 0.03 + 0.015,
-            opacity: Math.random() * 0.7 + 0.3,
-            color: Math.random() > 0.35 ? "rgba(180, 245, 255," : "rgba(220, 255, 200,",
+            opacity: Math.random() * 0.75 + 0.3,
+            color: Math.random() > 0.4 ? "rgba(160, 240, 255," : "rgba(200, 255, 210,",
             glowRadius: Math.random() * 16 + 10,
           };
-        } else if (rand < 0.8) {
-          // Wildflower Petal (Hydrangea Blue & Wildflower Pink)
+        } else {
+          // Floating wildflower petal in the rain
           const isPink = Math.random() > 0.5;
           return {
-            type: "ghibli-petal",
+            type: "petal",
             x: Math.random() * width,
             y: startY,
-            size: Math.random() * 6 + 3.5,
+            size: Math.random() * 5 + 3,
             speedY: Math.random() * 1.1 + 0.6,
-            speedX: Math.random() * 1.6 - 0.8,
+            speedX: Math.random() * 1.4 - 0.7,
             rotation: Math.random() * Math.PI * 2,
             rotSpeed: (Math.random() - 0.5) * 0.05,
             oscillation: Math.random() * 100,
             oscSpeed: Math.random() * 0.02 + 0.01,
             color: isPink ? "rgba(244, 114, 182," : "rgba(96, 165, 250,",
-            opacity: Math.random() * 0.55 + 0.35,
-          };
-        } else {
-          // Dandelion Spore / Golden Light Mote
-          return {
-            type: "spore",
-            x: Math.random() * width,
-            y: startY,
-            size: Math.random() * 2 + 1,
-            speedY: Math.random() * 0.6 + 0.3,
-            speedX: (Math.random() - 0.5) * 0.9,
-            opacity: Math.random() * 0.6 + 0.25,
-            color: "rgba(255, 255, 220,",
+            opacity: Math.random() * 0.55 + 0.3,
           };
         }
-      }
-
-      // ── Street (Rainy Night) ──
-      else if (t === "street") {
-        return {
-          type: "rain",
-          x: Math.random() * (width + 200) - 100,
-          y: startY,
-          len: Math.random() * 28 + 16,
-          speed: Math.random() * 14 + 16,
-          thickness: Math.random() * 1.2 + 0.6,
-          opacity: Math.random() * 0.45 + 0.15,
-          slant: -3.5,
-        };
       }
 
       // ── Campus (Golden Hour Leaves) ──
@@ -246,9 +230,9 @@ export default function AtmosphereCanvas({ theme, isPlaying }) {
       const curTheme = themeRef.current;
 
       // ─────────────────────────────────────────────────────────────
-      // 1. Volumetric God Rays / Sunbeams (Komorebi Light Shafts)
+      // 1. Volumetric God Rays / Moonlit Komorebi Beams
       // ─────────────────────────────────────────────────────────────
-      if (curTheme === "ghibli" || curTheme === "campus") {
+      if (curTheme === "street" || curTheme === "campus") {
         for (let i = 0; i < sunbeams.length; i++) {
           const ray = sunbeams[i];
           const pulse = Math.sin(time * ray.pulseSpeed * 60 + ray.pulsePhase);
@@ -256,10 +240,10 @@ export default function AtmosphereCanvas({ theme, isPlaying }) {
 
           ctx.save();
           const grad = ctx.createLinearGradient(ray.x, 0, ray.x + ray.angle * height, height);
-          const rayColor = curTheme === "ghibli" ? "180, 240, 255" : "255, 230, 160";
+          const rayColor = curTheme === "street" ? "150, 220, 255" : "255, 230, 160";
 
-          grad.addColorStop(0, `rgba(${rayColor}, ${currentOpacity * 1.5})`);
-          grad.addColorStop(0.4, `rgba(${rayColor}, ${currentOpacity * 0.8})`);
+          grad.addColorStop(0, `rgba(${rayColor}, ${currentOpacity * 1.4})`);
+          grad.addColorStop(0.4, `rgba(${rayColor}, ${currentOpacity * 0.7})`);
           grad.addColorStop(1, "transparent");
 
           ctx.fillStyle = grad;
@@ -275,15 +259,14 @@ export default function AtmosphereCanvas({ theme, isPlaying }) {
       }
 
       // ─────────────────────────────────────────────────────────────
-      // 2. Volumetric Anime Cloud Flow & Mist
+      // 2. Volumetric Anime Cloud Flow & Night Mist
       // ─────────────────────────────────────────────────────────────
-      if (curTheme === "ghibli" || curTheme === "campus" || curTheme === "street") {
+      if (curTheme === "street" || curTheme === "campus") {
         for (let i = 0; i < clouds.length; i++) {
           const cloud = clouds[i];
           cloud.x += cloud.speed * (isMusicPlaying ? 1.25 : 1.0);
           const wobble = Math.sin(time + cloud.wobbleOffset) * 8;
 
-          // Wrap cloud around screen
           if (cloud.x - cloud.width > width) {
             cloud.x = -cloud.width - 50;
             cloud.y = Math.random() * (height * 0.45) - 40;
@@ -300,10 +283,8 @@ export default function AtmosphereCanvas({ theme, isPlaying }) {
           );
 
           const cloudTint =
-            curTheme === "ghibli"
-              ? "210, 240, 255"
-              : curTheme === "street"
-              ? "160, 185, 220"
+            curTheme === "street"
+              ? "170, 210, 245"
               : "255, 235, 210";
 
           cloudGrad.addColorStop(0, `rgba(${cloudTint}, ${cloud.opacity * (isMusicPlaying ? 1.2 : 1.0)})`);
@@ -327,21 +308,50 @@ export default function AtmosphereCanvas({ theme, isPlaying }) {
       }
 
       // ─────────────────────────────────────────────────────────────
-      // 3. Particles & Living Flora Animation
+      // 3. Particles & Flora
       // ─────────────────────────────────────────────────────────────
 
-      // ── GHIBLI FOREST PARTICLES ──
-      if (curTheme === "ghibli") {
+      // ── STREET (ENCHANTED GHIBLI RAINY NIGHT) ──
+      if (curTheme === "street") {
         for (let i = 0; i < particles.length; i++) {
           const p = particles[i];
 
-          // A) Kodama / Forest Spirit Orbs
-          if (p.type === "spirit") {
+          // A) Rain streaks
+          if (p.type === "rain") {
+            const speedMultiplier = isMusicPlaying ? 1.2 : 1.0;
+            p.y += p.speed * speedMultiplier;
+            p.x += p.slant + mouseOffsetX * 0.02;
+
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(195, 230, 255, ${p.opacity * (isMusicPlaying ? 1.15 : 0.85)})`;
+            ctx.lineWidth = p.thickness;
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + p.slant * 2, p.y + p.len);
+            ctx.stroke();
+
+            // Splash ripples
+            if (p.y > height - 100 && Math.random() > 0.88 && ripples.length < 25) {
+              ripples.push({
+                x: p.x,
+                y: p.y + p.len,
+                radius: 1,
+                maxRadius: Math.random() * 12 + 6,
+                opacity: 0.35,
+              });
+            }
+
+            if (p.y > height + 40 || p.x < -100 || p.x > width + 100) {
+              particles[i] = createParticle("street");
+            }
+          }
+
+          // B) Forest Spirit Orbs (Kodama Fireflies)
+          else if (p.type === "spirit") {
             p.wobble += p.wobbleSpeed;
             p.y += p.speedY * (isMusicPlaying ? 1.2 : 1.0);
             p.x += p.speedX + Math.sin(p.wobble) * 0.8 + mouseOffsetX * 0.02;
 
-            // Interactive attraction to cursor when nearby
+            // Interactive attraction to cursor
             const dx = mouseX - p.x;
             const dy = mouseY - p.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
@@ -353,7 +363,6 @@ export default function AtmosphereCanvas({ theme, isPlaying }) {
             const pulse = 0.7 + Math.sin(p.wobble * 2) * 0.3;
             const opacity = p.opacity * pulse * (isMusicPlaying ? 1.3 : 1.0);
 
-            // Spirit Outer Halo Glow
             const spiritGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.glowRadius);
             spiritGrad.addColorStop(0, `${p.color}${opacity})`);
             spiritGrad.addColorStop(0.4, `${p.color}${opacity * 0.5})`);
@@ -364,22 +373,21 @@ export default function AtmosphereCanvas({ theme, isPlaying }) {
             ctx.arc(p.x, p.y, p.glowRadius, 0, Math.PI * 2);
             ctx.fill();
 
-            // Spirit Bright Core
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.9})`;
+            ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.95})`;
             ctx.shadowColor = "rgba(160, 240, 255, 0.9)";
             ctx.shadowBlur = 10;
             ctx.fill();
             ctx.shadowBlur = 0;
 
             if (p.y < -30 || p.x < -30 || p.x > width + 30) {
-              particles[i] = createParticle("ghibli");
+              particles[i] = createParticle("street");
             }
           }
 
-          // B) Wildflower Petals (Blue & Pink)
-          else if (p.type === "ghibli-petal") {
+          // C) Petals in rain
+          else if (p.type === "petal") {
             p.oscillation += p.oscSpeed;
             p.x += p.speedX + Math.sin(p.oscillation) * 1.1 + mouseOffsetX * 0.025;
             p.y += p.speedY * (isMusicPlaying ? 1.15 : 1.0);
@@ -398,60 +406,12 @@ export default function AtmosphereCanvas({ theme, isPlaying }) {
             ctx.restore();
 
             if (p.y > height + 20 || p.x < -40 || p.x > width + 40) {
-              particles[i] = createParticle("ghibli");
-            }
-          }
-
-          // C) Spores / Light motes
-          else {
-            p.y += p.speedY;
-            p.x += p.speedX + Math.sin(time + i) * 0.4;
-
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = `${p.color}${p.opacity * (isMusicPlaying ? 1.2 : 0.8)})`;
-            ctx.shadowColor = "rgba(255, 255, 200, 0.6)";
-            ctx.shadowBlur = 4;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-
-            if (p.y > height + 20 || p.x < -20 || p.x > width + 20) {
-              particles[i] = createParticle("ghibli");
+              particles[i] = createParticle("street");
             }
           }
         }
-      }
 
-      // ── STREET (RAIN & RIPPLES) ──
-      else if (curTheme === "street") {
-        for (let i = 0; i < particles.length; i++) {
-          const p = particles[i];
-          const speedMultiplier = isMusicPlaying ? 1.2 : 1.0;
-          p.y += p.speed * speedMultiplier;
-          p.x += p.slant + mouseOffsetX * 0.02;
-
-          ctx.beginPath();
-          ctx.strokeStyle = `rgba(200, 225, 255, ${p.opacity * (isMusicPlaying ? 1.15 : 0.85)})`;
-          ctx.lineWidth = p.thickness;
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(p.x + p.slant * 2, p.y + p.len);
-          ctx.stroke();
-
-          if (p.y > height - 100 && Math.random() > 0.88 && ripples.length < 25) {
-            ripples.push({
-              x: p.x,
-              y: p.y + p.len,
-              radius: 1,
-              maxRadius: Math.random() * 12 + 6,
-              opacity: 0.35,
-            });
-          }
-
-          if (p.y > height + 40 || p.x < -100 || p.x > width + 100) {
-            particles[i] = createParticle("street");
-          }
-        }
-
+        // Draw ripples
         for (let i = ripples.length - 1; i >= 0; i--) {
           const r = ripples[i];
           r.radius += 0.5;
@@ -464,7 +424,7 @@ export default function AtmosphereCanvas({ theme, isPlaying }) {
 
           ctx.beginPath();
           ctx.ellipse(r.x, r.y, r.radius * 2, r.radius * 0.7, 0, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(180, 215, 255, ${r.opacity})`;
+          ctx.strokeStyle = `rgba(180, 225, 255, ${r.opacity})`;
           ctx.lineWidth = 0.8;
           ctx.stroke();
         }

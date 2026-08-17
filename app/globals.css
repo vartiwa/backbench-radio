@@ -37,16 +37,12 @@ body {
   z-index: 0;
 }
 
-.hero-bg-ghibli {
-  background-image: url("/bg/ghibli-forest.jpg");
-}
-
 .hero-bg-campus {
   background-image: url("/bg/scene-wide.png");
 }
 
 .hero-bg-street {
-  background-image: url("/bg/street-wide.png");
+  background-image: url("/bg/ghibli-forest.jpg");
 }
 
 .hero-bg-classroom {
@@ -58,14 +54,11 @@ body {
 }
 
 @media (orientation: portrait) {
-  .hero-bg-ghibli {
-    background-image: url("/bg/ghibli-forest.jpg");
-  }
   .hero-bg-campus {
     background-image: url("/bg/scene-tall.png");
   }
   .hero-bg-street {
-    background-image: url("/bg/street-tall.png");
+    background-image: url("/bg/ghibli-forest.jpg");
   }
   .hero-bg-classroom {
     background-image: url("/bg/scene-tall.png");
