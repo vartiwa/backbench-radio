@@ -56,7 +56,7 @@ body {
 @media (orientation: portrait), (max-width: 768px) {
   .hero-bg-campus {
     background-image: url("/bg/scene-tall.png");
-    background-position: center 30%;
+    background-position: center center;
   }
   .hero-bg-exhausted {
     background-image: url("/bg/exhausted-tall.png");
@@ -64,7 +64,7 @@ body {
   }
   .hero-bg-street {
     background-image: url("/bg/street-tall.png");
-    background-position: center 40%;
+    background-position: center center;
   }
   .hero-bg-hiphop {
     background-image: url("/bg/hiphop-tall.jpg");
