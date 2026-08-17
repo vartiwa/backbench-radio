@@ -1,4 +1,13 @@
 export const THEMES = {
+  ghibli: {
+    id: "ghibli",
+    label: "Ghibli",
+    title: "Backbench Woods",
+    tagline: "enchanted canopy & quiet winds",
+    playlistId: "walking-back",
+    bgWide: "/bg/ghibli-forest.jpg",
+    bgTall: "/bg/ghibli-forest.jpg",
+  },
   campus: {
     id: "campus",
     label: "Campus",
@@ -37,4 +46,4 @@ export const THEMES = {
   },
 };
 
-export const DEFAULT_THEME = "campus";
+export const DEFAULT_THEME = "ghibli";

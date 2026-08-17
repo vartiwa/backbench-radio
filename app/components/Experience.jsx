@@ -105,6 +105,13 @@ export default function Experience() {
 
       {/* Background images for different mood themes with subtle flow & 2.5D parallax */}
       <div
+        className={`hero-bg hero-bg-ghibli tree-sway-ghibli pointer-events-none z-0 ${isPlaying ? "music-playing-flow" : ""}`}
+        style={{
+          opacity: theme === "ghibli" ? 1 : 0,
+          transform: bgTransform,
+        }}
+      />
+      <div
         className={`hero-bg hero-bg-campus pointer-events-none z-0 ${isPlaying ? "music-playing-flow" : ""}`}
         style={{
           opacity: theme === "campus" ? 1 : 0,
@@ -138,7 +145,9 @@ export default function Experience() {
         className="fixed inset-0 z-0 transition-opacity duration-700 pointer-events-none"
         style={{
           backgroundImage:
-            theme === "hiphop"
+            theme === "ghibli"
+              ? "linear-gradient(to bottom, rgba(5,20,25,0.35), transparent, rgba(5,15,20,0.8))"
+              : theme === "hiphop"
               ? "linear-gradient(to bottom, rgba(0,0,0,0.7), transparent, rgba(0,0,0,0.95))"
               : theme === "street"
               ? "linear-gradient(to bottom, rgba(0,0,0,0.55), transparent, rgba(0,0,0,0.85))"

@@ -37,6 +37,10 @@ body {
   z-index: 0;
 }
 
+.hero-bg-ghibli {
+  background-image: url("/bg/ghibli-forest.jpg");
+}
+
 .hero-bg-campus {
   background-image: url("/bg/scene-wide.png");
 }
@@ -54,6 +58,9 @@ body {
 }
 
 @media (orientation: portrait) {
+  .hero-bg-ghibli {
+    background-image: url("/bg/ghibli-forest.jpg");
+  }
   .hero-bg-campus {
     background-image: url("/bg/scene-tall.png");
   }
@@ -65,6 +72,23 @@ body {
   }
   .hero-bg-hiphop {
     background-image: url("/bg/hiphop-tall.jpg");
+  }
+}
+
+/* Ghibli living wind & tree canopy sway */
+.tree-sway-ghibli {
+  animation: tree-wind-sway 10s ease-in-out infinite alternate;
+}
+
+@keyframes tree-wind-sway {
+  0% {
+    filter: brightness(1) saturate(1.05);
+  }
+  50% {
+    filter: brightness(1.08) saturate(1.15);
+  }
+  100% {
+    filter: brightness(1.03) saturate(1.1);
   }
 }
 
