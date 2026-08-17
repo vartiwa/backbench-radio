@@ -278,11 +278,11 @@ export default function Experience() {
             onClick={handleToggleExhausted}
             className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[11px] font-mono uppercase tracking-widest backdrop-blur-md transition-all duration-300 ${
               isExhausted
-                ? "border border-teal-400/50 bg-teal-950/60 text-teal-200 shadow-[0_0_15px_rgba(45,212,191,0.35)] scale-105"
-                : "border border-white/10 bg-black/40 text-paper/60 hover:border-teal-500/40 hover:text-teal-200 hover:scale-105"
+                ? "border border-teal-400/60 bg-teal-950/80 text-teal-200 shadow-[0_0_20px_rgba(45,212,191,0.5)] scale-105"
+                : "border border-teal-400/40 bg-teal-950/40 text-teal-200/90 shadow-[0_0_12px_rgba(45,212,191,0.25)] hover:border-teal-400 hover:text-teal-100 hover:shadow-[0_0_20px_rgba(45,212,191,0.45)] hover:scale-105"
             }`}
           >
-            <span className={`h-1.5 w-1.5 rounded-full ${isExhausted ? "bg-teal-400 animate-pulse shadow-[0_0_6px_#2dd4bf]" : "bg-paper/40"}`} />
+            <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse shadow-[0_0_8px_#2dd4bf]" />
             <span>{isExhausted ? "⚔️ Sanctuary: Active" : "⚔️ Enter Sanctuary"}</span>
           </button>
         )}

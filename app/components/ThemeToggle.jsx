@@ -24,15 +24,14 @@ export default function ThemeToggle({ theme, onChange, isExhausted, onToggleExha
       {theme === "campus" && (
         <button
           onClick={onToggleExhausted}
-          title="Toggle Sanctuary Mode"
-          className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-bold tracking-wider transition-all duration-300 ${
+          className={`px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
             isExhausted
-              ? "border border-teal-400/60 bg-teal-900/80 text-teal-200 shadow-[0_0_12px_rgba(45,212,191,0.5)] scale-105"
-              : "border border-white/15 bg-black/50 text-paper/60 hover:text-teal-300 hover:border-teal-500/40"
+              ? "border border-teal-400/70 bg-teal-900/90 text-teal-100 shadow-[0_0_16px_rgba(45,212,191,0.55)] scale-105"
+              : "border border-teal-400/35 bg-teal-950/40 text-teal-200/80 shadow-[0_0_10px_rgba(45,212,191,0.2)] hover:text-teal-100 hover:border-teal-400 hover:shadow-[0_0_15px_rgba(45,212,191,0.4)]"
           }`}
         >
-          <span className={`h-1.5 w-1.5 rounded-full ${isExhausted ? "bg-teal-400 animate-pulse shadow-[0_0_6px_#2dd4bf]" : "bg-paper/40"}`} />
-          <span>{isExhausted ? "SANCTUARY" : "SANCTUARY"}</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse shadow-[0_0_6px_#2dd4bf]" />
+          <span>SANCTUARY</span>
         </button>
       )}
     </div>
