@@ -60,7 +60,7 @@ body {
   }
   .hero-bg-exhausted {
     background-image: url("/bg/exhausted-tall.png");
-    background-position: center 40%;
+    background-position: center center;
   }
   .hero-bg-street {
     background-image: url("/bg/street-tall.png");
@@ -68,7 +68,7 @@ body {
   }
   .hero-bg-hiphop {
     background-image: url("/bg/hiphop-tall.jpg");
-    background-position: center 45%;
+    background-position: center center;
   }
 }
 
