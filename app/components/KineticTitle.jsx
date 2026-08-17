@@ -1,90 +1,126 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { animate, stagger } from "animejs";
 
-export default function KineticTitle({ title, tagline, theme, isPlaying }) {
+const GLITCH_CHARS = "░▒▓█#$%&!?01X*+⚔†";
+
+export default function KineticTitle({ title, tagline, theme, isPlaying, isExhausted }) {
   const containerRef = useRef(null);
   const taglineRef = useRef(null);
   const waveAnimRef = useRef(null);
+  const [displayText, setDisplayText] = useState(title);
+  const [isGlitchingText, setIsGlitchingText] = useState(false);
 
+  const isEx        = isExhausted && theme === "campus";
   const isHiphop    = theme === "hiphop";
   const isStreet    = theme === "street";
-  const isClassroom = theme === "classroom";
 
-  // Per-theme text gradients
-  const gradient = isHiphop
-    ? "linear-gradient(175deg, #fff9ee 0%, #ffd580 55%, #f59030 100%)"
+  // Per-theme tailored color gradients that harmonize with the visual art
+  const gradient = isEx
+    ? "linear-gradient(175deg, #ffffff 0%, #ccfbf1 28%, #5eead4 60%, #0d9488 100%)"
+    : isHiphop
+    ? "linear-gradient(175deg, #ffffff 0%, #fef08a 25%, #fb923c 60%, #ea580c 100%)"
     : isStreet
-    ? "linear-gradient(175deg, #ffffff 0%, #e0f8ff 35%, #a0d8ef 70%, #7ec8e3 100%)"
-    : isClassroom
-    ? "linear-gradient(175deg, #fffef8 0%, #ffeebb 60%, #f5ce60 100%)"
-    : "linear-gradient(175deg, #ffffff 0%, #ffedd5 35%, #fecdd3 70%, #fda4af 100%)";
+    ? "linear-gradient(175deg, #ffffff 0%, #e0f2fe 28%, #7dd3fc 62%, #38bdf8 100%)"
+    : "linear-gradient(175deg, #ffffff 0%, #fef3c7 30%, #fde68a 60%, #f59e0b 100%)";
 
-  // Per-theme soft drop-shadow glow
-  const glowFilter = isHiphop
-    ? "drop-shadow(0 4px 20px rgba(0,0,0,0.7)) drop-shadow(0 0 28px rgba(245,160,60,0.45))"
+  // Retained refined Playfair display typography
+  const titleClass = "font-display italic tracking-tight font-normal";
+  const sizeClass = "text-[2.25rem] min-[390px]:text-[2.75rem] sm:text-8xl lg:text-9xl leading-none";
+
+  const taglineColor = isEx
+    ? "#5eead4"
+    : isHiphop
+    ? "#fed7aa"
     : isStreet
-    ? "drop-shadow(0 4px 24px rgba(0,0,0,0.8)) drop-shadow(0 0 30px rgba(126,200,227,0.5)) drop-shadow(0 0 14px rgba(56,189,248,0.4))"
-    : isClassroom
-    ? "drop-shadow(0 4px 20px rgba(0,0,0,0.7)) drop-shadow(0 0 24px rgba(230,180,60,0.38))"
-    : "drop-shadow(0 4px 20px rgba(0,0,0,0.65)) drop-shadow(0 0 28px rgba(251,113,133,0.4)) drop-shadow(0 0 12px rgba(251,146,60,0.25))";
+    ? "#bae6fd"
+    : "#fef08a";
 
-  const titleClass = isHiphop
-    ? "font-anton uppercase"
-    : "font-display italic";
+  // Fast Glitch Scramble Reveal on Sanctuary Switch
+  useEffect(() => {
+    if (isEx) {
+      setIsGlitchingText(true);
+      const target = "Backbench Sanctuary";
+      let iteration = 0;
+      const maxIterations = 10;
 
-  const sizeClass = isHiphop
-    ? "text-[3.2rem] sm:text-8xl lg:text-[10rem] leading-none tracking-widest"
-    : "text-[3.2rem] sm:text-8xl lg:text-9xl leading-none tracking-tight";
+      const interval = setInterval(() => {
+        setDisplayText(
+          target
+            .split("")
+            .map((char, idx) => {
+              if (char === " ") return " ";
+              if (idx < (iteration / maxIterations) * target.length) {
+                return target[idx];
+              }
+              return GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)];
+            })
+            .join("")
+        );
 
-  const taglineColor = isHiphop
-    ? "rgba(255,160,80,0.65)"
-    : isStreet
-    ? "rgba(180,230,255,0.8)"
-    : isClassroom
-    ? "rgba(245,190,90,0.6)"
-    : "rgba(254,205,211,0.75)";
+        iteration++;
+        if (iteration >= maxIterations) {
+          clearInterval(interval);
+          setDisplayText(target);
+          setIsGlitchingText(false);
+        }
+      }, 35);
 
-  // 1. Anime.js Letter Entrance & Theme Transition
+      return () => clearInterval(interval);
+    } else {
+      setDisplayText(title);
+      setIsGlitchingText(false);
+    }
+  }, [isEx, title]);
+
+  // Anime.js Letter Entrance on Theme Switch
   useEffect(() => {
     if (!containerRef.current) return;
     const chars = containerRef.current.querySelectorAll(".char-span");
     if (!chars.length) return;
 
-    animate(chars, {
-      translateY: [28, 0],
-      opacity: [0, 1],
-      scale: [0.93, 1],
-      rotateZ: isHiphop ? [-3, 0] : [-1, 0],
-      delay: stagger(30, { start: 40 }),
-      duration: 800,
-      ease: "outExpo",
-    });
+    if (isEx) {
+      animate(chars, {
+        translateY: [16, 0],
+        opacity: [0, 1],
+        scale: [1.08, 1],
+        delay: stagger(16),
+        duration: 450,
+        ease: "outExpo",
+      });
+    } else {
+      animate(chars, {
+        translateY: [24, 0],
+        opacity: [0, 1],
+        scale: [0.95, 1],
+        delay: stagger(22, { start: 20 }),
+        duration: 650,
+        ease: "outExpo",
+      });
+    }
 
-    // Tagline morph animation
     if (taglineRef.current) {
       animate(taglineRef.current, {
         opacity: [0, 1],
-        translateY: [8, 0],
-        duration: 600,
+        translateY: [6, 0],
+        duration: 500,
         ease: "outCubic",
-        delay: 180,
+        delay: 150,
       });
     }
-  }, [title, theme, isHiphop]);
+  }, [theme, isHiphop, isEx]);
 
-  // 2. Audio-reactive Gentle Acoustic Wave when playing
+  // Audio-reactive Smooth Acoustic Float when Playing
   useEffect(() => {
     if (!containerRef.current) return;
     const chars = containerRef.current.querySelectorAll(".char-span");
 
     if (isPlaying && chars.length > 0) {
       waveAnimRef.current = animate(chars, {
-        translateY: [-2.5, 2.5],
-        scale: [0.99, 1.01],
-        delay: stagger(70),
-        duration: 1600,
+        translateY: [-3, 3],
+        delay: stagger(60, { from: "center" }),
+        duration: 1400,
         alternate: true,
         loop: true,
         ease: "inOutSine",
@@ -96,7 +132,7 @@ export default function KineticTitle({ title, tagline, theme, isPlaying }) {
       animate(chars, {
         translateY: 0,
         scale: 1,
-        duration: 350,
+        duration: 300,
         ease: "outQuad",
       });
     }
@@ -107,30 +143,47 @@ export default function KineticTitle({ title, tagline, theme, isPlaying }) {
   }, [isPlaying]);
 
   return (
-    <div className="flex flex-col items-center text-center px-6 z-10 my-auto select-none">
-      {/* Glow wrapper */}
-      <div
-        style={{ filter: glowFilter }}
-        className="transition-all duration-700"
-      >
+    <div className="flex flex-col items-center text-center px-6 z-10 my-auto select-none transition-all duration-500">
+      {/* Main Title Wrapper */}
+      <div className="gemini-aura-container relative select-none">
+        {/* Mood-Matched Pure Breathing Glow Aura */}
+        <div className={`gemini-aura-halo ${isPlaying ? "gemini-aura-active" : ""}`} />
+
         <h1
           ref={containerRef}
-          className={`${titleClass} ${sizeClass} inline-flex flex-wrap justify-center overflow-hidden py-2`}
+          className={`${titleClass} ${sizeClass} inline-flex flex-wrap justify-center overflow-hidden py-2 relative z-10`}
           style={{
             backgroundImage: gradient,
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
             WebkitTextFillColor: "transparent",
             color: "transparent",
+            WebkitTextStroke: isEx
+              ? "1px rgba(94, 234, 212, 0.45)"
+              : isHiphop
+              ? "1px rgba(251, 146, 60, 0.45)"
+              : isStreet
+              ? "1px rgba(125, 211, 252, 0.45)"
+              : "1px rgba(254, 215, 170, 0.45)",
+            filter: isEx
+              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 2px 6px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(45,212,191,0.35))"
+              : isHiphop
+              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 2px 6px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(249,115,22,0.35))"
+              : isStreet
+              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 2px 6px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(56,189,248,0.35))"
+              : "drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 2px 6px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(245,158,11,0.3))",
+            backfaceVisibility: "hidden",
+            WebkitFontSmoothing: "antialiased",
           }}
         >
-          {title.split("").map((char, index) => (
+          {displayText.split("").map((char, index) => (
             <span
-              key={`${theme}-${char}-${index}`}
-              className="char-span inline-block will-change-transform"
+              key={`${theme}-${isEx}-${char}-${index}`}
+              className="char-span inline-block will-change-transform transform-gpu"
               style={{
                 display: char === " " ? "inline" : "inline-block",
                 width: char === " " ? "0.25em" : "auto",
+                backfaceVisibility: "hidden",
               }}
             >
               {char === " " ? "\u00A0" : char}
@@ -139,29 +192,47 @@ export default function KineticTitle({ title, tagline, theme, isPlaying }) {
         </h1>
       </div>
 
-      {/* Dynamic Animated Separator */}
-      <div className="mt-5 flex items-center gap-3">
+      {/* Dynamic Mood-Matched Animated Separator with Highlight Sweep */}
+      <div className="mt-4 flex items-center gap-3">
         <div
-          className={`h-px bg-paper/25 transition-all duration-700 ${
-            isPlaying ? "w-12 bg-amber/50 shadow-[0_0_8px_rgba(232,163,74,0.4)]" : "w-6"
+          className={`h-px transition-all duration-700 ${
+            isEx
+              ? isPlaying ? "w-16 bg-teal-400 shadow-[0_0_12px_#2dd4bf]" : "w-10 bg-teal-400/60"
+              : isHiphop
+              ? isPlaying ? "w-16 bg-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.8)]" : "w-8 bg-orange-400/60"
+              : isStreet
+              ? isPlaying ? "w-16 bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.8)]" : "w-8 bg-sky-400/60"
+              : isPlaying ? "w-14 bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.6)]" : "w-7 bg-amber-400/50"
           }`}
         />
         <div
-          className={`h-[5px] w-[5px] rounded-full transition-all duration-700 ${
-            isPlaying ? "bg-amber scale-125 shadow-[0_0_8px_rgba(232,163,74,0.6)]" : "bg-paper/30"
+          className={`rounded-full transition-all duration-700 ${
+            isEx
+              ? isPlaying ? "h-2 w-2 bg-teal-300 shadow-[0_0_10px_#2dd4bf] scale-125" : "h-1.5 w-1.5 bg-teal-400/70"
+              : isHiphop
+              ? isPlaying ? "h-2 w-2 bg-orange-400 shadow-[0_0_10px_#fb923c] scale-125" : "h-1.5 w-1.5 bg-orange-400/70"
+              : isStreet
+              ? isPlaying ? "h-2 w-2 bg-sky-300 shadow-[0_0_10px_rgba(56,189,248,0.9)] scale-125" : "h-1.5 w-1.5 bg-sky-400/70"
+              : isPlaying ? "h-2 w-2 bg-amber-300 scale-125 shadow-[0_0_10px_rgba(245,158,11,0.7)]" : "h-1.5 w-1.5 bg-amber-400/60"
           }`}
         />
         <div
-          className={`h-px bg-paper/25 transition-all duration-700 ${
-            isPlaying ? "w-12 bg-amber/50 shadow-[0_0_8px_rgba(232,163,74,0.4)]" : "w-6"
+          className={`h-px transition-all duration-700 ${
+            isEx
+              ? isPlaying ? "w-16 bg-teal-400 shadow-[0_0_12px_#2dd4bf]" : "w-10 bg-teal-400/60"
+              : isHiphop
+              ? isPlaying ? "w-16 bg-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.8)]" : "w-8 bg-orange-400/60"
+              : isStreet
+              ? isPlaying ? "w-16 bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.8)]" : "w-8 bg-sky-400/60"
+              : isPlaying ? "w-14 bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.6)]" : "w-7 bg-amber-400/50"
           }`}
         />
       </div>
 
-      {/* Cinematic Tagline */}
+      {/* Cinematic Mood-Matched Tagline */}
       <p
         ref={taglineRef}
-        className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.3em] mt-5"
+        className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.22em] sm:tracking-[0.32em] font-normal mt-3.5 sm:mt-4 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] text-center px-3"
         style={{ color: taglineColor }}
       >
         {tagline}

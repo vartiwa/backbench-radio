@@ -13,6 +13,10 @@ export const PLAYLISTS = [
     tracks: [
       { id: "sunflower", title: "Sunflower", artist: "Post Malone, Swae Lee", year: 2018, duration: 158, audioUrl: "/audio/sunflower.mp3", mood: "upbeat" },
       { id: "sweater-weather", title: "Sweater Weather", artist: "The Neighbourhood", year: 2013, duration: 240, audioUrl: "/audio/sweater-weather.mp3", mood: "chill" },
+      { id: "enna-sona", title: "Enna Sona", artist: "Arijit Singh, A.R. Rahman", year: 2017, duration: 213, audioUrl: "/audio/enna-sona.webm", mood: "romantic-acoustic" },
+      { id: "night-changes", title: "Night Changes", artist: "One Direction", year: 2014, duration: 220, audioUrl: "/audio/night-changes.mp3", mood: "acoustic" },
+      { id: "stay", title: "STAY", artist: "The Kid LAROI, Justin Bieber", year: 2021, duration: 141, audioUrl: "/audio/stay.mp3", mood: "upbeat" },
+      { id: "century", title: "Century", artist: "EsDeeKid", year: 2024, duration: 165, audioUrl: "/audio/century.mp3", mood: "chill-drift" },
       { id: "big-dawgs", title: "Big Dawgs", artist: "Hanumankind & Kalmi", year: 2024, duration: 232, audioUrl: "/audio/big-dawgs.mp3", mood: "hiphop-banger" },
     ],
   },
@@ -25,17 +29,6 @@ export const PLAYLISTS = [
       { id: "blinding-lights", title: "Blinding Lights", artist: "The Weeknd", year: 2020, duration: 200, audioUrl: "/audio/blinding-lights.mp3", mood: "synth-pop" },
       { id: "end-of-beginning", title: "End of Beginning", artist: "Djo", year: 2022, duration: 159, audioUrl: "/audio/end-of-beginning.mp3", mood: "indie-rain" },
       { id: "gata-only", title: "Gata Only", artist: "FloyyMenor, Cris MJ", year: 2024, duration: 222, audioUrl: "/audio/gata-only.mp3", mood: "reggaeton-vibe" },
-    ],
-  },
-  {
-    id: "walking-back",
-    name: "Walking Back",
-    note: "campus behind you, glowing lights",
-    tracks: [
-      { id: "enna-sona", title: "Enna Sona", artist: "Arijit Singh, A.R. Rahman", year: 2017, duration: 213, audioUrl: "/audio/enna-sona.webm", mood: "romantic-acoustic" },
-      { id: "night-changes", title: "Night Changes", artist: "One Direction", year: 2014, duration: 220, audioUrl: "/audio/night-changes.mp3", mood: "acoustic" },
-      { id: "stay", title: "STAY", artist: "The Kid LAROI, Justin Bieber", year: 2021, duration: 141, audioUrl: "/audio/stay.mp3", mood: "upbeat" },
-      { id: "century", title: "Century", artist: "EsDeeKid", year: 2024, duration: 165, audioUrl: "/audio/century.mp3", mood: "chill-drift" },
     ],
   },
   {

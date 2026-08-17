@@ -171,8 +171,8 @@ function SeekBar({ currentTime, duration, onSeek }) {
     <div ref={trackRef} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
       className="group relative h-5 w-full cursor-pointer touch-none flex items-center"
       role="slider" aria-valuemin={0} aria-valuemax={duration} aria-valuenow={isDragging ? dragTime : currentTime} aria-label="Track progress">
-      <div className="h-[3px] w-full rounded-full bg-white/15">
-        <div className="h-full rounded-full bg-amber/90" style={{ width: `${pct}%`, transition: isDragging ? "none" : "width 0.1s linear" }} />
+      <div className="h-[3px] w-full rounded-full bg-white/15 overflow-hidden">
+        <div className="h-full rounded-full bg-amber/90 will-change-transform" style={{ width: `${pct}%` }} />
       </div>
       <div className={`absolute top-1/2 h-3 w-3 -translate-y-1/2 -translate-x-1/2 rounded-full bg-paper shadow-sm transition-opacity ${isDragging ? "opacity-100 scale-110" : "opacity-0 group-hover:opacity-100"}`} style={{ left: `${pct}%` }} />
     </div>
@@ -383,7 +383,7 @@ export default function Player({
     <div className="relative w-full max-w-2xl mx-auto px-4">
       {/* NO <audio> JSX element — we manage it imperatively via audioRef */}
 
-      <div className={`rounded-[24px] sm:rounded-full border transition-all duration-500 ${
+      <div className={`rounded-[24px] sm:rounded-full border transition-[background-color,border-color,box-shadow] duration-500 transform-gpu ${
         playing ? "border-amber/30 bg-black/60 shadow-[0_0_30px_rgba(232,163,74,0.15)]" : "border-white/10 bg-black/40"
       } backdrop-blur-2xl p-3 sm:p-2.5 sm:pr-4`}>
 
