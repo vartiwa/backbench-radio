@@ -7,6 +7,8 @@ import ThemeToggle from "./ThemeToggle";
 import AmbientMixer from "./AmbientMixer";
 import SleepTimer from "./SleepTimer";
 import KeyboardShortcuts from "./KeyboardShortcuts";
+import AtmosphereCanvas from "./AtmosphereCanvas";
+import KineticTitle from "./KineticTitle";
 import { THEMES, DEFAULT_THEME } from "../lib/theme";
 import { ALL_TRACKS } from "../lib/tracks";
 
@@ -21,6 +23,7 @@ export default function Experience() {
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [currentTrackId, setCurrentTrackId] = useState(ALL_TRACKS[0].id);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [parallax, setParallax] = useState({ x: 0, y: 0 });
 
   // Modals state (mutual exclusion)
   const [activeModal, setActiveModal] = useState(null); // 'ambient' | 'timer' | null
@@ -32,6 +35,7 @@ export default function Experience() {
   // Global hotkey handlers ref
   const hotkeyHandlersRef = useRef({});
 
+  // Load saved theme preference
   useEffect(() => {
     try {
       const savedTheme = window.localStorage.getItem(STORAGE_KEY);
@@ -39,6 +43,35 @@ export default function Experience() {
     } catch (e) {
       console.error("Failed loading local storage preferences", e);
     }
+  }, []);
+
+  // 2.5D Interactive Mouse Parallax for background artwork
+  useEffect(() => {
+    let frame;
+    let targetX = 0;
+    let targetY = 0;
+    let curX = 0;
+    let curY = 0;
+
+    const handleMouseMove = (e) => {
+      targetX = (e.clientX / window.innerWidth - 0.5) * -14;
+      targetY = (e.clientY / window.innerHeight - 0.5) * -10;
+    };
+
+    const loop = () => {
+      curX += (targetX - curX) * 0.04;
+      curY += (targetY - curY) * 0.04;
+      setParallax({ x: curX, y: curY });
+      frame = requestAnimationFrame(loop);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    frame = requestAnimationFrame(loop);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(frame);
+    };
   }, []);
 
   const handleThemeChange = (next) => {
@@ -59,6 +92,7 @@ export default function Experience() {
   }, []);
 
   const active = THEMES[theme] || THEMES[DEFAULT_THEME];
+  const bgTransform = `translate3d(${parallax.x}px, ${parallax.y}px, 0)`;
 
   return (
     <main
@@ -66,22 +100,37 @@ export default function Experience() {
       suppressHydrationWarning
       className="fade-in relative flex min-h-dvh flex-1 flex-col items-center justify-between overflow-hidden selection:bg-amber/30"
     >
-      {/* Background images for different mood themes with subtle flow when music plays */}
+      {/* Dynamic Interactive Atmosphere Particle Canvas */}
+      <AtmosphereCanvas theme={theme} isPlaying={isPlaying} />
+
+      {/* Background images for different mood themes with subtle flow & 2.5D parallax */}
       <div
         className={`hero-bg hero-bg-campus pointer-events-none z-0 ${isPlaying ? "music-playing-flow" : ""}`}
-        style={{ opacity: theme === "campus" ? 1 : 0 }}
+        style={{
+          opacity: theme === "campus" ? 1 : 0,
+          transform: bgTransform,
+        }}
       />
       <div
         className={`hero-bg hero-bg-street pointer-events-none z-0 ${isPlaying ? "music-playing-flow" : ""}`}
-        style={{ opacity: theme === "street" ? 1 : 0 }}
+        style={{
+          opacity: theme === "street" ? 1 : 0,
+          transform: bgTransform,
+        }}
       />
       <div
         className={`hero-bg hero-bg-classroom pointer-events-none z-0 ${isPlaying ? "music-playing-flow" : ""}`}
-        style={{ opacity: theme === "classroom" ? 1 : 0 }}
+        style={{
+          opacity: theme === "classroom" ? 1 : 0,
+          transform: bgTransform,
+        }}
       />
       <div
         className={`hero-bg hero-bg-hiphop pointer-events-none z-0 ${isPlaying ? "music-playing-flow" : ""}`}
-        style={{ opacity: theme === "hiphop" ? 1 : 0 }}
+        style={{
+          opacity: theme === "hiphop" ? 1 : 0,
+          transform: bgTransform,
+        }}
       />
 
       {/* Dynamic Overlay Gradient */}
@@ -117,81 +166,13 @@ export default function Experience() {
         </div>
       </div>
 
-      {/* Center Title — per-theme gradient text */}
-      {(() => {
-        const isHiphop    = theme === "hiphop";
-        const isStreet    = theme === "street";
-        const isClassroom = theme === "classroom";
-
-        // Soft, soothing gradients — near-white at top, gentle theme tint at bottom
-        const gradient = isHiphop
-          ? "linear-gradient(175deg, #fff9ee 0%, #ffd580 55%, #f59030 100%)"  // warm white → honey → amber glow
-          : isStreet
-          ? "linear-gradient(175deg, #f8faff 0%, #d8e8ff 60%, #a0bce8 100%)"  // near white → soft cornflower → muted steel
-          : isClassroom
-          ? "linear-gradient(175deg, #fffef8 0%, #ffeebb 60%, #f5ce60 100%)"  // paper white → warm cream → soft honey
-          : "linear-gradient(175deg, #ffffff 0%, #ffedd5 35%, #fecdd3 70%, #fda4af 100%)"; // crisp white → soft peach → subtle rose pink
-
-        // Subtle glow with contrast backing for high legibility
-        const glowFilter = isHiphop
-          ? "drop-shadow(0 4px 20px rgba(0,0,0,0.7)) drop-shadow(0 0 28px rgba(245,160,60,0.45))"
-          : isStreet
-          ? "drop-shadow(0 4px 20px rgba(0,0,0,0.7)) drop-shadow(0 0 24px rgba(140,180,240,0.4))"
-          : isClassroom
-          ? "drop-shadow(0 4px 20px rgba(0,0,0,0.7)) drop-shadow(0 0 24px rgba(230,180,60,0.38))"
-          : "drop-shadow(0 4px 20px rgba(0,0,0,0.65)) drop-shadow(0 0 28px rgba(251,113,133,0.4)) drop-shadow(0 0 12px rgba(251,146,60,0.25))";
-
-        // Title typography class
-        const titleClass = isHiphop
-          ? `font-anton uppercase ${isPlaying ? "title-music-beat" : ""}`
-          : `font-display italic ${isPlaying ? "title-music-beat" : ""}`;
-
-        const sizeClass = isHiphop
-          ? "text-[3.2rem] sm:text-8xl lg:text-[10rem] leading-none tracking-widest"
-          : "text-[3.2rem] sm:text-8xl lg:text-9xl leading-none tracking-tight";
-
-        const taglineColor = isHiphop
-          ? "rgba(255,160,80,0.6)"
-          : isStreet
-          ? "rgba(180,210,255,0.55)"
-          : isClassroom
-          ? "rgba(245,190,90,0.55)"
-          : "rgba(254,205,211,0.7)";
-
-        return (
-          <div className="flex flex-col items-center text-center px-6 z-10 my-auto select-none">
-            {/* Glow wrapper — must be SEPARATE from gradient clip element */}
-            <div style={{ filter: glowFilter }} className={`transition-all duration-700 ${isPlaying ? "title-music-beat" : ""}`}>
-              <h1
-                className={`${titleClass} ${sizeClass}`}
-                style={{
-                  backgroundImage: gradient,
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  color: "transparent",
-                }}
-              >
-                {active.title}
-              </h1>
-            </div>
-
-            {/* Animated separator */}
-            <div className="mt-5 flex items-center gap-3">
-              <div className={`h-px bg-paper/20 transition-all duration-700 ${isPlaying ? "w-10" : "w-5"}`} />
-              <div className="h-[5px] w-[5px] rounded-full bg-paper/25" />
-              <div className={`h-px bg-paper/20 transition-all duration-700 ${isPlaying ? "w-10" : "w-5"}`} />
-            </div>
-
-            <p
-              className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.3em] mt-5"
-              style={{ color: taglineColor }}
-            >
-              {active.tagline}
-            </p>
-          </div>
-        );
-      })()}
+      {/* Kinetic Anime.js Title & Tagline */}
+      <KineticTitle
+        title={active.title}
+        tagline={active.tagline}
+        theme={theme}
+        isPlaying={isPlaying}
+      />
 
       {/* Bottom Player & Footer */}
       <div style={{ paddingBottom: edgeB }} className="w-full flex flex-col items-center gap-2.5 z-10">

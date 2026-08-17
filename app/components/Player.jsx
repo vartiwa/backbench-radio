@@ -39,9 +39,15 @@ function Vinyl({ playing, track }) {
 
   return (
     <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0 select-none">
+      {/* Dynamic Audio Aura Glow Ring */}
+      <div
+        className={`absolute -inset-1 rounded-full transition-all duration-700 pointer-events-none ${
+          playing ? "scale-110 opacity-50 bg-amber/25 blur-md" : "scale-95 opacity-0"
+        }`}
+      />
       {/* Outer ambient glow halo when playing */}
       <div
-        className={`absolute inset-0 rounded-full transition-opacity duration-700 ${
+        className={`absolute inset-0 rounded-full transition-opacity duration-700 pointer-events-none ${
           playing ? "opacity-100 shadow-[0_0_24px_rgba(232,163,74,0.4)]" : "opacity-0"
         }`}
       />
