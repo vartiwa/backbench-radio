@@ -7,7 +7,6 @@ import {
   Flame,
   RotateCcw,
   Sparkles,
-  TrendingUp,
   Award,
   Lock,
   Radio,
@@ -16,6 +15,12 @@ import {
   Clock,
   Target,
   BarChart2,
+  Power,
+  ChevronRight,
+  Disc3,
+  Sliders,
+  Shield,
+  Activity,
 } from "lucide-react";
 import {
   getListeningStats,
@@ -35,6 +40,7 @@ export default function ListeningStatsModal({
   const [history, setHistory] = useState([]);
   const [milestones, setMilestones] = useState([]);
   const [hoveredBar, setHoveredBar] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'activity' | 'stations' | 'milestones'
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
@@ -58,7 +64,7 @@ export default function ListeningStatsModal({
 
   if (!isOpen || !stats) return null;
 
-  // Active days and calculations
+  // Active days and average
   const activeDays = Object.values(stats.days || {}).filter((s) => s > 0);
   const avgSeconds =
     activeDays.length > 0
@@ -90,55 +96,107 @@ export default function ListeningStatsModal({
     }
   };
 
-  // Donut circumference and strokes
-  const radius = 64;
-  const circumference = 2 * Math.PI * radius;
-  const campusOffset = 0;
-  const campusLength = (circumference * campusPct) / 100;
-  const streetOffset = campusLength;
-  const streetLength = (circumference * streetPct) / 100;
-  const hiphopOffset = campusLength + streetLength;
-  const hiphopLength = (circumference * hiphopPct) / 100;
+  // Radial gauge calculations (VisionOS arc gauge with 220 degree sweep)
+  const gaugePct = Math.min(100, Math.max(8, targetPct));
+  const gaugeArcLength = 190;
+  const gaugeOffset = gaugeArcLength - (gaugeArcLength * gaugePct) / 100;
+
+  const themeArtwork =
+    currentTheme === "hiphop"
+      ? "/bg/hiphop.jpg"
+      : currentTheme === "street"
+      ? "/bg/street.jpg"
+      : "/bg/scene.jpg";
+
+  const themeTitle =
+    currentTheme === "hiphop"
+      ? "Hip Hop & Desi Cypher"
+      : currentTheme === "street"
+      ? "Rainy Route Monsoon"
+      : "Campus Gateway 1872";
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-xl animate-fade-in select-none"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-2xl animate-fade-in select-none"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#0d0f15] p-5 sm:p-8 text-paper shadow-[0_25px_70px_rgba(0,0,0,0.9)]">
+      <div className="relative w-full max-w-4xl max-h-[94vh] overflow-y-auto rounded-[2.5rem] border border-white/15 bg-[#17181f]/85 p-6 sm:p-8 text-paper shadow-[0_30px_100px_rgba(0,0,0,0.9)] backdrop-blur-3xl font-sans">
         
-        {/* Top Header */}
-        <div className="flex items-center justify-between pb-5 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/5 border border-white/10 text-paper/70">
-              <Headphones size={15} />
-            </div>
-            <div>
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-paper/40 font-semibold block">
-                ANALYTICS & JOURNAL
-              </span>
-              <h2 className="font-mono text-sm sm:text-base font-bold uppercase tracking-wider text-paper/90">
-                Listening Statistics
-              </h2>
-            </div>
+        {/* ══ TOP FLOATING VISIONOS CAPSULE NAVIGATION BAR ══ */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-6 border-b border-white/10">
+          
+          {/* Floating Pill Tabs */}
+          <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 p-1 backdrop-blur-xl">
+            <button
+              type="button"
+              onClick={() => setActiveTab("overview")}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+                activeTab === "overview"
+                  ? "bg-white/20 text-white shadow-sm font-semibold"
+                  : "text-paper/60 hover:text-paper hover:bg-white/5"
+              }`}
+            >
+              <Headphones size={13} />
+              <span>Overview</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("activity")}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+                activeTab === "activity"
+                  ? "bg-white/20 text-white shadow-sm font-semibold"
+                  : "text-paper/60 hover:text-paper hover:bg-white/5"
+              }`}
+            >
+              <BarChart2 size={13} />
+              <span>7-Day Activity</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("stations")}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+                activeTab === "stations"
+                  ? "bg-white/20 text-white shadow-sm font-semibold"
+                  : "text-paper/60 hover:text-paper hover:bg-white/5"
+              }`}
+            >
+              <Radio size={13} />
+              <span>Stations</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("milestones")}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+                activeTab === "milestones"
+                  ? "bg-white/20 text-white shadow-sm font-semibold"
+                  : "text-paper/60 hover:text-paper hover:bg-white/5"
+              }`}
+            >
+              <Award size={13} />
+              <span>Milestones</span>
+            </button>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-[10px] text-paper/60">
+          {/* Right Action Icons */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-paper/60">
               <span
-                className={`h-1.5 w-1.5 rounded-full ${
+                className={`h-2 w-2 rounded-full ${
                   isPlaying ? "bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" : "bg-paper/30"
                 }`}
               />
-              <span>{isPlaying ? "STREAMING" : "STANDBY"}</span>
+              <span className="font-mono text-[11px]">{isPlaying ? "Live Audio" : "Standby"}</span>
             </div>
 
             <button
               onClick={onClose}
               type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 hover:bg-white/15 border border-white/10 text-paper/70 hover:text-paper transition-all cursor-pointer"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-paper/80 hover:text-paper transition-all cursor-pointer"
               aria-label="Close"
             >
               <X size={15} />
@@ -146,187 +204,194 @@ export default function ListeningStatsModal({
           </div>
         </div>
 
-        {/* ── BENTO GRID LAYOUT (Muted, Dark Aesthetic) ── */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-5">
+        {/* ══ BENTO GRID SPATIAL INTERFACE ══ */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-5">
           
-          {/* ══ 1. LEFT COLUMN: DONUT DISTRIBUTION CARD (Col 1-5) ══ */}
-          <div className="md:col-span-5 rounded-2xl bg-[#13151e] border border-white/10 p-6 flex flex-col justify-between shadow-lg relative">
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="rounded-md bg-white/5 border border-white/5 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-paper/60 font-semibold">
-                  DISTRIBUTION
-                </span>
-                <span className="text-[10px] text-paper/40 font-mono">7-Day Overview</span>
-              </div>
-
-              {/* Multi-Segment Donut Ring Chart */}
-              <div className="relative my-6 flex items-center justify-center">
-                <svg className="h-44 w-44 -rotate-90 transform" viewBox="0 0 160 160">
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r={radius}
-                    fill="transparent"
-                    stroke="rgba(255,255,255,0.04)"
-                    strokeWidth="16"
-                  />
-                  {/* Campus Segment (Muted Amber) */}
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r={radius}
-                    fill="transparent"
-                    stroke="#d97706"
-                    strokeWidth="16"
-                    strokeDasharray={`${campusLength - 4} ${circumference}`}
-                    strokeDashoffset={-campusOffset}
-                    strokeLinecap="round"
-                    className="transition-all duration-1000 opacity-90"
-                  />
-                  {/* Rainy Night Segment (Muted Sky) */}
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r={radius}
-                    fill="transparent"
-                    stroke="#0284c7"
-                    strokeWidth="16"
-                    strokeDasharray={`${streetLength - 4} ${circumference}`}
-                    strokeDashoffset={-streetOffset}
-                    strokeLinecap="round"
-                    className="transition-all duration-1000 opacity-90"
-                  />
-                  {/* Hip Hop Segment (Muted Indigo/Violet) */}
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r={radius}
-                    fill="transparent"
-                    stroke="#7c3aed"
-                    strokeWidth="16"
-                    strokeDasharray={`${hiphopLength - 4} ${circumference}`}
-                    strokeDashoffset={-hiphopOffset}
-                    strokeLinecap="round"
-                    className="transition-all duration-1000 opacity-90"
-                  />
-                </svg>
-
-                {/* Big Center Total Stat */}
-                <div className="absolute flex flex-col items-center justify-center text-center">
-                  <span className="font-mono text-3xl sm:text-4xl font-bold tracking-tight text-paper drop-shadow-sm">
-                    {formatListeningDuration(stats.totalSeconds)}
-                  </span>
-                  <span className="font-mono text-[9px] uppercase tracking-widest text-paper/40 mt-0.5">
-                    ALL-TIME
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Breakdown List with SVG Icons */}
-            <div className="space-y-2.5 pt-3 border-t border-white/5 font-mono text-xs">
-              <div className="flex items-center justify-between text-paper/80">
-                <span className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-amber-500" />
-                  <Radio size={13} className="text-amber-500/80" />
-                  <span>Campus</span>
-                </span>
-                <span className="font-bold text-amber-400/90">{campusPct}%</span>
-              </div>
-
-              <div className="flex items-center justify-between text-paper/80">
-                <span className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-sky-600" />
-                  <CloudRain size={13} className="text-sky-400/80" />
-                  <span>Rainy Night</span>
-                </span>
-                <span className="font-bold text-sky-400/90">{streetPct}%</span>
-              </div>
-
-              <div className="flex items-center justify-between text-paper/80">
-                <span className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-purple-600" />
-                  <Mic2 size={13} className="text-purple-400/80" />
-                  <span>Hip Hop</span>
-                </span>
-                <span className="font-bold text-purple-400/90">{hiphopPct}%</span>
-              </div>
-            </div>
-          </div>
-
-          {/* ══ 2. RIGHT COLUMN: BENTO CARDS & BAR CHART (Col 6-12) ══ */}
-          <div className="md:col-span-7 flex flex-col gap-4 sm:gap-5">
+          {/* ════ LEFT COLUMN: LIVE SCENE & ACTION CARDS (Col 1-6) ════ */}
+          <div className="md:col-span-6 flex flex-col gap-4">
             
-            {/* Top Sub-Grid: Today's Focus Card & Goal Card */}
+            {/* 1. Live Visual Scene Card (Top Left) */}
+            <div className="group relative h-48 w-full overflow-hidden rounded-[2rem] border border-white/15 bg-black/60 shadow-lg">
+              <img
+                src={themeArtwork}
+                alt="Station Scene"
+                className="h-full w-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/40" />
+
+              {/* Floating Top-Left Tag */}
+              <div className="absolute top-3.5 left-4 flex items-center gap-1.5 rounded-full border border-white/20 bg-black/50 px-2.5 py-1 text-[10px] font-mono text-paper backdrop-blur-md">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-ping" />
+                <span>Live Broadcast</span>
+              </div>
+
+              {/* Bottom Scene Info */}
+              <div className="absolute bottom-4 inset-x-4">
+                <p className="text-xs uppercase tracking-wider text-paper/50 font-mono">Current Atmosphere</p>
+                <h3 className="text-base font-bold text-paper drop-shadow-md mt-0.5">{themeTitle}</h3>
+              </div>
+            </div>
+
+            {/* 2. Sub-Grid: Soft Radiant Gradient Card & Action Pills */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               
-              {/* Today's Focus Card (Muted Dark Glass with subtle Amber highlight) */}
-              <div className="rounded-2xl bg-[#13151e] border border-white/10 p-5 flex flex-col justify-between shadow-lg">
+              {/* Soft Radiant Gradient Card (VisionOS Peach-Lavender Glass) */}
+              <div className="rounded-[2rem] bg-gradient-to-br from-purple-500/20 via-pink-500/15 to-sky-500/10 border border-white/15 p-5 flex flex-col justify-between shadow-lg backdrop-blur-xl">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] uppercase font-semibold tracking-wider text-paper/50 flex items-center gap-1.5">
-                    <Clock size={13} className="text-amber-400/80" />
-                    <span>Today's Focus</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-paper">
+                    <Flame size={14} className="text-amber-400" />
                   </span>
-                  <span className="font-mono text-[9px] uppercase tracking-wider text-amber-400/80 bg-amber-400/10 border border-amber-400/20 rounded-md px-2 py-0.5 font-bold">
-                    SESSION
+                  <span className="font-mono text-[9px] uppercase tracking-wider rounded-full bg-white/10 px-2 py-0.5 text-paper/70 font-semibold">
+                    Streak
                   </span>
                 </div>
 
-                <div className="mt-3">
-                  <div className="font-mono text-3xl font-bold tracking-tight text-paper">
-                    {formatListeningDuration(todaySeconds)}
+                <div className="mt-4">
+                  <div className="font-mono text-2xl sm:text-3xl font-extrabold text-paper">
+                    {String(stats.currentStreak || 1).padStart(2, "0")}{" "}
+                    <span className="text-xs font-normal text-paper/60">Days</span>
                   </div>
-                  <div className="font-mono text-[10px] text-paper/40 mt-0.5">
-                    Active listening recorded
-                  </div>
+                  <div className="text-[11px] text-paper/50 mt-0.5">Consecutive Listening</div>
                 </div>
               </div>
 
-              {/* Goal Progress Card */}
-              <div className="rounded-2xl bg-[#13151e] border border-white/10 p-5 flex flex-col justify-between shadow-lg">
+              {/* Action Pill Card 1 (Daily Target Progress) */}
+              <div className="rounded-[2rem] bg-[#1d1e26]/80 border border-white/10 p-5 flex flex-col justify-between shadow-lg backdrop-blur-xl">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-paper/50 font-semibold flex items-center gap-1.5">
-                    <Target size={13} className="text-teal-400/80" />
-                    <span>Daily Goal</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 text-paper/70">
+                    <Target size={14} className="text-teal-400" />
                   </span>
-                  <span className="rounded-md bg-teal-400/10 border border-teal-400/20 text-teal-300 px-2 py-0.5 font-mono text-[10px] font-bold">
+                  <span className="font-mono text-[10px] font-bold text-teal-300 bg-teal-400/15 rounded-full px-2 py-0.5">
                     {targetPct}%
                   </span>
                 </div>
 
-                <div className="mt-3">
-                  <div className="font-mono text-2xl font-bold text-paper">
-                    {Math.round(todaySeconds / 60)} / 60 <span className="text-xs font-normal text-paper/40">min</span>
+                <div className="mt-4">
+                  <div className="font-mono text-xl font-bold text-paper">
+                    {Math.round(todaySeconds / 60)} / 60 <span className="text-xs font-normal text-paper/50">min</span>
                   </div>
-                  <div className="mt-2.5 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                  <div className="mt-2 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
                     <div
                       style={{ width: `${targetPct}%` }}
-                      className="h-full rounded-full bg-teal-500/80 transition-all duration-700"
+                      className="h-full rounded-full bg-teal-400 shadow-[0_0_8px_#2dd4bf] transition-all duration-700"
                     />
                   </div>
                 </div>
               </div>
+
             </div>
 
-            {/* ══ Chunky 7-Day Performance Bar Chart ══ */}
-            <div className="rounded-2xl bg-[#13151e] border border-white/10 p-5 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <BarChart2 size={14} className="text-paper/60" />
-                  <span className="font-mono text-xs font-bold text-paper/80 uppercase tracking-wider">
-                    7-Day Activity Trend
-                  </span>
-                </div>
-                <span className="font-mono text-[10px] text-paper/40">
-                  Avg: {formatListeningDuration(avgSeconds)}/day
+            {/* 3. Compact Horizontal Metric Capsule */}
+            <div className="flex items-center justify-between rounded-2xl bg-[#1d1e26]/70 border border-white/10 px-5 py-3 text-xs font-mono shadow-sm">
+              <div className="flex items-center gap-2">
+                <Clock size={13} className="text-paper/40" />
+                <span className="text-paper/60">Daily Average:</span>
+                <span className="font-bold text-paper">{formatListeningDuration(avgSeconds)}</span>
+              </div>
+              <div className="h-3 w-px bg-white/10" />
+              <div className="flex items-center gap-2">
+                <Activity size={13} className="text-paper/40" />
+                <span className="text-paper/60">Total Logged:</span>
+                <span className="font-bold text-amber-300">{formatListeningDuration(stats.totalSeconds)}</span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* ════ RIGHT COLUMN: VISIONOS RADIAL DIAL GAUGE & 7-DAY BAR CARD (Col 7-12) ════ */}
+          <div className="md:col-span-6 flex flex-col gap-4">
+            
+            {/* 1. Large VisionOS Arc Dial Gauge Card (Matching Reference Image) */}
+            <div className="rounded-[2.5rem] bg-[#1d1e26]/90 border border-white/15 p-6 flex flex-col items-center justify-between shadow-xl relative overflow-hidden backdrop-blur-2xl">
+              
+              <div className="w-full flex items-center justify-between text-xs">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-paper/50 font-semibold">
+                  Acoustic Energy
+                </span>
+                <span className="rounded-full bg-white/5 border border-white/10 px-2.5 py-0.5 text-[10px] text-paper/60 font-mono">
+                  Today's Gauge
                 </span>
               </div>
 
-              {/* Chunky Rounded Bar Array */}
-              <div className="flex items-end justify-between gap-2.5 h-32 pt-6 pb-2 px-2 bg-black/40 rounded-xl border border-white/5">
+              {/* Radial Arc Gauge Visualizer with Tick Marks */}
+              <div className="relative my-4 flex items-center justify-center h-48 w-48">
+                <svg className="h-full w-full -rotate-90 transform" viewBox="0 0 160 160">
+                  <defs>
+                    <linearGradient id="visionosGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#a78bfa" />
+                      <stop offset="50%" stopColor="#f472b6" />
+                      <stop offset="100%" stopColor="#fde047" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Outer Background Track */}
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    fill="transparent"
+                    stroke="rgba(255,255,255,0.06)"
+                    strokeWidth="12"
+                    strokeDasharray="280"
+                    strokeDashoffset="70"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Active Gradient Arc */}
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    fill="transparent"
+                    stroke="url(#visionosGrad)"
+                    strokeWidth="12"
+                    strokeDasharray="280"
+                    strokeDashoffset={280 - (210 * gaugePct) / 100}
+                    strokeLinecap="round"
+                    className="transition-all duration-1000"
+                  />
+                </svg>
+
+                {/* Inner Concentric Circle & Power Readout (VisionOS Style) */}
+                <div className="absolute flex flex-col items-center justify-center text-center">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 border border-white/15 text-paper mb-1 shadow-inner">
+                    <Power size={16} className={isPlaying ? "text-emerald-400" : "text-paper/60"} />
+                  </div>
+                  <span className="font-mono text-2xl sm:text-3xl font-extrabold tracking-tight text-paper drop-shadow-md">
+                    {formatListeningDuration(todaySeconds)}
+                  </span>
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-paper/40 mt-0.5">
+                    Today's Session
+                  </span>
+                </div>
+              </div>
+
+              {/* Gauge Bottom Status Strip */}
+              <div className="w-full pt-3 border-t border-white/10 flex items-center justify-between text-[11px] font-mono text-paper/50">
+                <span className="flex items-center gap-1.5">
+                  <Disc3 size={12} className="text-amber-400" />
+                  <span>320 KBPS High-Fidelity</span>
+                </span>
+                <span className="text-paper/70 font-semibold">{todaySeconds > 0 ? "Active Log" : "Idle"}</span>
+              </div>
+            </div>
+
+            {/* 2. Mini 7-Day Chunky Pill Chart Card (Matching Reference Bottom Player Strip) */}
+            <div className="rounded-[2rem] bg-[#1d1e26]/80 border border-white/10 p-5 shadow-lg backdrop-blur-xl">
+              <div className="flex items-center justify-between mb-3 text-xs">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-paper/50 font-semibold">
+                  7-Day Chronological Trend
+                </span>
+                <span className="font-mono text-[10px] text-paper/40">
+                  {history.filter((h) => h.seconds > 0).length} active days
+                </span>
+              </div>
+
+              {/* Chunky Rounded Pill Bar Array */}
+              <div className="flex items-end justify-between gap-2 h-24 pt-4 pb-1 px-2 bg-black/40 rounded-2xl border border-white/5">
                 {history.map((day, idx) => {
                   const heightPercent = Math.max(
-                    12,
+                    14,
                     Math.min(100, Math.round((day.seconds / maxBarSeconds) * 100))
                   );
                   const isHovered = hoveredBar === idx;
@@ -338,28 +403,24 @@ export default function ListeningStatsModal({
                       onMouseLeave={() => setHoveredBar(null)}
                       className="group relative flex-1 flex flex-col items-center h-full justify-end cursor-pointer"
                     >
-                      {/* Floating percentage/duration chip floating above bar */}
+                      {/* Floating hover chip */}
                       <span
-                        className={`absolute -top-5 font-mono text-[9px] font-semibold transition-all ${
-                          day.isToday
-                            ? "text-amber-400 font-bold"
-                            : isHovered
-                            ? "text-paper"
-                            : "text-paper/40"
+                        className={`absolute -top-5 font-mono text-[8px] font-bold transition-all ${
+                          day.isToday ? "text-amber-400 font-bold" : isHovered ? "text-paper" : "text-paper/30"
                         }`}
                       >
-                        {day.seconds > 0 ? `${Math.round(day.seconds / 60)}m` : "0m"}
+                        {day.seconds > 0 ? `${Math.round(day.seconds / 60)}m` : "0"}
                       </span>
 
-                      {/* Chunky Rounded Pill Bar (Muted Tones) */}
+                      {/* Chunky Pill Bar */}
                       <div
                         style={{ height: `${heightPercent}%` }}
-                        className={`w-full max-w-[28px] rounded-lg transition-all duration-300 relative ${
+                        className={`w-full max-w-[24px] rounded-lg transition-all duration-300 ${
                           day.isToday
-                            ? "bg-amber-500/90 shadow-[0_0_10px_rgba(245,158,11,0.3)]"
+                            ? "bg-gradient-to-t from-amber-500 to-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.4)]"
                             : day.seconds > 0
-                            ? "bg-slate-600 hover:bg-slate-500"
-                            : "bg-white/5 hover:bg-white/10"
+                            ? "bg-gradient-to-t from-purple-500/80 to-indigo-400/80 group-hover:from-purple-400 group-hover:to-indigo-300"
+                            : "bg-white/5 group-hover:bg-white/10"
                         }`}
                       />
                     </div>
@@ -367,15 +428,11 @@ export default function ListeningStatsModal({
                 })}
               </div>
 
-              {/* Days of Week (M, T, W, T, F, S, S) */}
-              <div className="flex items-center justify-between gap-2.5 mt-2.5 px-2 font-mono text-[10px]">
+              {/* Day Labels (M, T, W, T, F, S, S) */}
+              <div className="flex items-center justify-between gap-2 mt-2 px-2 font-mono text-[9px]">
                 {history.map((day) => (
                   <div key={day.dateKey} className="flex-1 text-center">
-                    <span
-                      className={`uppercase tracking-wider block ${
-                        day.isToday ? "text-amber-400 font-bold" : "text-paper/40"
-                      }`}
-                    >
+                    <span className={day.isToday ? "text-amber-400 font-bold" : "text-paper/40"}>
                       {day.dayName}
                     </span>
                   </div>
@@ -383,76 +440,17 @@ export default function ListeningStatsModal({
               </div>
             </div>
 
-            {/* ══ Bottom Row: Muted Streak Card & Milestones ══ */}
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-              
-              {/* Streak Card (Col 1-5) */}
-              <div className="sm:col-span-5 rounded-2xl bg-[#13151e] border border-white/10 p-4 flex flex-col justify-between shadow-lg">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] uppercase font-semibold tracking-wider text-paper/50 flex items-center gap-1.5">
-                    <Flame size={13} className="text-orange-400/90" />
-                    <span>Streak</span>
-                  </span>
-                  <span className="font-mono text-[9px] text-orange-400/80 bg-orange-400/10 border border-orange-400/20 rounded px-1.5 py-0.5 font-bold uppercase">
-                    ACTIVE
-                  </span>
-                </div>
-                <div className="mt-2">
-                  <div className="font-mono text-2xl font-bold text-paper">
-                    {String(stats.currentStreak || 1).padStart(2, "0")}{" "}
-                    <span className="text-xs font-normal text-paper/50">Days</span>
-                  </div>
-                  <div className="text-[9px] font-mono text-paper/40 mt-0.5">
-                    Consecutive listening
-                  </div>
-                </div>
-              </div>
-
-              {/* Milestones Card (Col 6-12) */}
-              <div className="sm:col-span-7 rounded-2xl bg-[#13151e] border border-white/10 p-4 flex flex-col justify-between shadow-lg font-mono">
-                <div className="flex items-center justify-between text-[10px] text-paper/50 uppercase font-semibold">
-                  <span className="flex items-center gap-1.5">
-                    <Award size={13} className="text-amber-400/80" />
-                    <span>Milestones</span>
-                  </span>
-                  <span className="text-paper/60 font-bold">
-                    {milestones.filter((m) => m.unlocked).length} / {milestones.length}
-                  </span>
-                </div>
-
-                <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-1">
-                  {milestones.map((m) => (
-                    <div
-                      key={m.id}
-                      title={`${m.title}: ${m.desc}`}
-                      className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-medium flex items-center gap-1.5 transition-all ${
-                        m.unlocked
-                          ? "border border-amber-400/30 bg-amber-400/10 text-amber-200"
-                          : "border border-white/5 bg-white/5 text-paper/30 opacity-60"
-                      }`}
-                    >
-                      {m.unlocked ? (
-                        <Award size={11} className="text-amber-400" />
-                      ) : (
-                        <Lock size={10} className="text-paper/40" />
-                      )}
-                      <span>{m.title}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
           </div>
+
         </div>
 
-        {/* Bottom Actions */}
+        {/* ══ BOTTOM CONTROLS & PURGE TELEMETRY ══ */}
         <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between font-mono">
           {!showResetConfirm ? (
             <button
               onClick={() => setShowResetConfirm(true)}
               type="button"
-              className="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-widest text-paper/30 hover:text-rose-400 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-paper/30 hover:text-rose-400 transition-colors cursor-pointer"
             >
               <RotateCcw size={10} />
               <span>Reset Data</span>
@@ -480,7 +478,7 @@ export default function ListeningStatsModal({
           <button
             onClick={onClose}
             type="button"
-            className="rounded-xl border border-white/15 bg-white/10 hover:bg-white/20 px-6 py-2 font-mono text-xs uppercase tracking-wider text-paper transition-all cursor-pointer font-bold"
+            className="rounded-full bg-white/15 hover:bg-white/25 px-7 py-2 font-mono text-xs uppercase tracking-wider text-paper transition-all cursor-pointer font-bold border border-white/10"
           >
             Done
           </button>
