@@ -20,7 +20,7 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
   const gradient = isEx
     ? "linear-gradient(175deg, #ffffff 0%, #ccfbf1 28%, #5eead4 60%, #0d9488 100%)"
     : isHiphop
-    ? "linear-gradient(175deg, #ffffff 0%, #fef08a 25%, #fb923c 60%, #ea580c 100%)"
+    ? "linear-gradient(175deg, #ffffff 0%, #f3e8ff 25%, #d8b4fe 55%, #a855f7 85%, #7e22ce 100%)"
     : isStreet
     ? "linear-gradient(175deg, #ffffff 0%, #e0f2fe 28%, #7dd3fc 62%, #38bdf8 100%)"
     : "linear-gradient(175deg, #ffffff 0%, #fef3c7 30%, #fde68a 60%, #f59e0b 100%)";
@@ -32,7 +32,7 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
   const taglineColor = isEx
     ? "#5eead4"
     : isHiphop
-    ? "#fed7aa"
+    ? "#e9d5ff"
     : isStreet
     ? "#bae6fd"
     : "#fef08a";
@@ -161,14 +161,14 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
             WebkitTextStroke: isEx
               ? "1px rgba(94, 234, 212, 0.45)"
               : isHiphop
-              ? "1px rgba(251, 146, 60, 0.45)"
+              ? "1px rgba(192, 132, 252, 0.45)"
               : isStreet
               ? "1px rgba(125, 211, 252, 0.45)"
               : "1px rgba(254, 215, 170, 0.45)",
             filter: isEx
               ? "drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 2px 6px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(45,212,191,0.35))"
               : isHiphop
-              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 2px 6px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(249,115,22,0.35))"
+              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 2px 6px rgba(0,0,0,0.85)) drop-shadow(0 0 16px rgba(168,85,247,0.45))"
               : isStreet
               ? "drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 2px 6px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(56,189,248,0.35))"
               : "drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 2px 6px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(245,158,11,0.3))",
@@ -199,7 +199,7 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
             isEx
               ? isPlaying ? "w-16 bg-teal-400 shadow-[0_0_12px_#2dd4bf]" : "w-10 bg-teal-400/60"
               : isHiphop
-              ? isPlaying ? "w-16 bg-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.8)]" : "w-8 bg-orange-400/60"
+              ? isPlaying ? "w-16 bg-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.8)]" : "w-8 bg-purple-400/60"
               : isStreet
               ? isPlaying ? "w-16 bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.8)]" : "w-8 bg-sky-400/60"
               : isPlaying ? "w-14 bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.6)]" : "w-7 bg-amber-400/50"
@@ -210,7 +210,7 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
             isEx
               ? isPlaying ? "h-2 w-2 bg-teal-300 shadow-[0_0_10px_#2dd4bf] scale-125" : "h-1.5 w-1.5 bg-teal-400/70"
               : isHiphop
-              ? isPlaying ? "h-2 w-2 bg-orange-400 shadow-[0_0_10px_#fb923c] scale-125" : "h-1.5 w-1.5 bg-orange-400/70"
+              ? isPlaying ? "h-2 w-2 bg-purple-300 shadow-[0_0_10px_#c084fc] scale-125" : "h-1.5 w-1.5 bg-purple-400/70"
               : isStreet
               ? isPlaying ? "h-2 w-2 bg-sky-300 shadow-[0_0_10px_rgba(56,189,248,0.9)] scale-125" : "h-1.5 w-1.5 bg-sky-400/70"
               : isPlaying ? "h-2 w-2 bg-amber-300 scale-125 shadow-[0_0_10px_rgba(245,158,11,0.7)]" : "h-1.5 w-1.5 bg-amber-400/60"
@@ -221,7 +221,7 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
             isEx
               ? isPlaying ? "w-16 bg-teal-400 shadow-[0_0_12px_#2dd4bf]" : "w-10 bg-teal-400/60"
               : isHiphop
-              ? isPlaying ? "w-16 bg-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.8)]" : "w-8 bg-orange-400/60"
+              ? isPlaying ? "w-16 bg-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.8)]" : "w-8 bg-purple-400/60"
               : isStreet
               ? isPlaying ? "w-16 bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.8)]" : "w-8 bg-sky-400/60"
               : isPlaying ? "w-14 bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.6)]" : "w-7 bg-amber-400/50"

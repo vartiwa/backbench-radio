@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ALL_TRACKS, PLAYLISTS } from "../lib/tracks";
+import { getCustomTracks } from "../lib/customTracks";
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -34,10 +35,15 @@ const IconStats = () => (
     <path d="M18 20V10M12 20V4M6 20v-6" />
   </svg>
 );
+const IconPlaylist = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width={14} height={14} className="pointer-events-none shrink-0">
+    <path d="M21 15V6M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM12 12H3M16 6H3M12 18H3" />
+  </svg>
+);
 
 /* ── Vinyl Disc ─────────────────────────────────────── */
 /* ── Realistic Vinyl Turntable Disc with Animated Tonearm ── */
-function Vinyl({ playing, track }) {
+function Vinyl({ playing, track, moodAura = "bg-amber-400/25", moodHalo = "shadow-[0_0_20px_rgba(245,158,11,0.35)]" }) {
   const initials = track?.title
     ? track.title.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase()
     : "BB";
@@ -47,20 +53,20 @@ function Vinyl({ playing, track }) {
       {/* Dynamic Audio Aura Glow Ring */}
       <div
         className={`absolute -inset-1 rounded-full transition-all duration-700 pointer-events-none ${
-          playing ? "scale-110 opacity-50 bg-amber/25 blur-md" : "scale-95 opacity-0"
+          playing ? `scale-110 opacity-40 ${moodAura} blur-md` : "scale-95 opacity-0"
         }`}
       />
       {/* Outer ambient glow halo when playing */}
       <div
         className={`absolute inset-0 rounded-full transition-opacity duration-700 pointer-events-none ${
-          playing ? "opacity-100 shadow-[0_0_24px_rgba(232,163,74,0.4)]" : "opacity-0"
+          playing ? `opacity-100 ${moodHalo}` : "opacity-0"
         }`}
       />
 
       {/* ── Spinning Vinyl Record ── */}
       <div
         className={`relative h-full w-full rounded-full overflow-hidden shadow-2xl ring-1 transition-all duration-500 vinyl-spin ${
-          playing ? "ring-amber/40 shadow-[inset_0_0_12px_rgba(0,0,0,0.8)]" : "ring-white/15"
+          playing ? "ring-white/30 shadow-[inset_0_0_12px_rgba(0,0,0,0.8)]" : "ring-white/15"
         }`}
         data-playing={playing}
       >
@@ -76,20 +82,20 @@ function Vinyl({ playing, track }) {
         <div className="pointer-events-none absolute inset-0 vinyl-anisotropic-sheen mix-blend-screen opacity-70" />
 
         {/* Center Vintage Record Label */}
-        <div className="absolute left-1/2 top-1/2 h-6 w-6 sm:h-7 sm:w-7 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900 shadow-md ring-1 ring-amber-400/40 flex flex-col items-center justify-center">
+        <div className="absolute left-1/2 top-1/2 h-6 w-6 sm:h-7 sm:w-7 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-[#2a2420] via-[#1c1815] to-[#110f0d] shadow-md ring-1 ring-white/25 flex flex-col items-center justify-center">
           {/* Label mini decorative ring */}
-          <div className="absolute inset-0.5 rounded-full border border-amber-300/30" />
+          <div className="absolute inset-0.5 rounded-full border border-white/20" />
           
           {/* Label initials */}
-          <span className="font-mono text-[7px] sm:text-[8px] font-bold text-amber-100 tracking-wider z-10 leading-none">
+          <span className="font-mono text-[7px] sm:text-[8px] font-bold text-white/90 tracking-wider z-10 leading-none">
             {initials}
           </span>
-          <span className="font-mono text-[5px] text-amber-300/80 uppercase tracking-tight scale-90 z-10">
+          <span className="font-mono text-[5px] text-white/60 uppercase tracking-tight scale-90 z-10">
             33 RPM
           </span>
 
-          {/* Center Brass Spindle & Hole */}
-          <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black ring-[1px] ring-amber-300/70 shadow-inner z-20" />
+          {/* Center Spindle & Hole */}
+          <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black ring-[1px] ring-white/50 shadow-inner z-20" />
         </div>
 
         {/* Outer Vinyl Bevel Rim */}
@@ -106,7 +112,7 @@ function Vinyl({ playing, track }) {
         {/* Pivot Base */}
         <div className="relative h-3 w-3 rounded-full bg-gradient-to-b from-neutral-600 to-neutral-900 ring-1 ring-white/30 shadow-md">
           <div className="absolute inset-0.5 rounded-full bg-gradient-to-tr from-neutral-800 to-neutral-400" />
-          <div className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/80 shadow-[0_0_4px_rgba(232,163,74,0.8)]" />
+          <div className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/80 shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
         </div>
 
         {/* Metallic Arm Rod */}
@@ -114,11 +120,11 @@ function Vinyl({ playing, track }) {
           {/* Cartridge & Stylus Head */}
           <div className="absolute -bottom-1.5 -left-1 h-3.5 w-2 rounded-sm bg-neutral-900 ring-[0.5px] ring-white/40 shadow-md transform rotate-[-8deg]">
             {/* Cartridge highlight */}
-            <div className="h-1 w-full bg-amber-400/70 rounded-t-sm" />
+            <div className="h-1 w-full bg-white/50 rounded-t-sm" />
             {/* Needle tip glow */}
             <div
               className={`absolute -bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full transition-colors duration-500 ${
-                playing ? "bg-amber-400 shadow-[0_0_6px_rgba(232,163,74,0.9)]" : "bg-neutral-500"
+                playing ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.9)]" : "bg-neutral-500"
               }`}
             />
           </div>
@@ -129,18 +135,18 @@ function Vinyl({ playing, track }) {
 }
 
 /* ── Equalizer Bars ─────────────────────────────────── */
-function Equalizer({ playing }) {
+function Equalizer({ playing, colorClass = "bg-amber-400/90" }) {
   return (
     <div className="flex items-end gap-[2px] h-3.5 w-3 shrink-0">
-      <div className={`w-[3px] rounded-full bg-amber/80 ${playing ? "eq-bar-1" : "h-[3px]"}`} />
-      <div className={`w-[3px] rounded-full bg-amber/80 ${playing ? "eq-bar-2" : "h-[5px]"}`} />
-      <div className={`w-[3px] rounded-full bg-amber/80 ${playing ? "eq-bar-3" : "h-[4px]"}`} />
+      <div className={`w-[3px] rounded-full ${colorClass} ${playing ? "eq-bar-1" : "h-[3px]"}`} />
+      <div className={`w-[3px] rounded-full ${colorClass} ${playing ? "eq-bar-2" : "h-[5px]"}`} />
+      <div className={`w-[3px] rounded-full ${colorClass} ${playing ? "eq-bar-3" : "h-[4px]"}`} />
     </div>
   );
 }
 
 /* ── Seek Bar ───────────────────────────────────────── */
-function SeekBar({ currentTime, duration, onSeek }) {
+function SeekBar({ currentTime, duration, onSeek, seekFill = "bg-amber-400" }) {
   const trackRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragTime, setDragTime]     = useState(0);
@@ -177,9 +183,9 @@ function SeekBar({ currentTime, duration, onSeek }) {
       className="group relative h-5 w-full cursor-pointer touch-none flex items-center"
       role="slider" aria-valuemin={0} aria-valuemax={duration} aria-valuenow={isDragging ? dragTime : currentTime} aria-label="Track progress">
       <div className="h-[3px] w-full rounded-full bg-white/15 overflow-hidden">
-        <div className="h-full rounded-full bg-amber/90 will-change-transform" style={{ width: `${pct}%` }} />
+        <div className={`h-full rounded-full ${seekFill} will-change-transform`} style={{ width: `${pct}%` }} />
       </div>
-      <div className={`absolute top-1/2 h-3 w-3 -translate-y-1/2 -translate-x-1/2 rounded-full bg-paper shadow-sm transition-opacity ${isDragging ? "opacity-100 scale-110" : "opacity-0 group-hover:opacity-100"}`} style={{ left: `${pct}%` }} />
+      <div className={`absolute top-1/2 h-3 w-3 -translate-y-1/2 -translate-x-1/2 rounded-full bg-white shadow-sm transition-opacity ${isDragging ? "opacity-100 scale-110" : "opacity-0 group-hover:opacity-100"}`} style={{ left: `${pct}%` }} />
     </div>
   );
 }
@@ -191,12 +197,12 @@ function Pill({ onClick, active, highlight, title, children }) {
       type="button"
       onClick={onClick}
       title={title}
-      className={`relative p-1.5 rounded-full transition-all duration-500 cursor-pointer ${
+      className={`relative p-2 rounded-full transition-all duration-300 cursor-pointer ${
         highlight
-          ? "text-amber-300 bg-amber-400/25 ring-2 ring-amber-400/70 shadow-[0_0_16px_rgba(245,158,11,0.6)] scale-110 animate-pulse"
+          ? "text-white bg-white/20 ring-1 ring-white/40 shadow-[0_0_12px_rgba(255,255,255,0.3)] scale-105"
           : active
-          ? "text-amber"
-          : "text-paper/40 hover:text-paper/70"
+          ? "text-white bg-white/15 ring-1 ring-white/25 shadow-sm"
+          : "text-paper/50 hover:text-paper hover:bg-white/10"
       }`}
     >
       {children}
@@ -208,11 +214,20 @@ function Pill({ onClick, active, highlight, title, children }) {
    PLAYER  —  imperative Audio object, same as test page
    ═══════════════════════════════════════════════════════ */
 export default function Player({
-  preferredPlaylistId, onOpenAmbient, onOpenSleepTimer, onOpenStats,
+  preferredPlaylistId, onOpenAmbient, onOpenSleepTimer, onOpenStats, onOpenPlaylist,
   activeTimerSeconds, currentTrackId, setCurrentTrackId,
   onRegisterHandlers, onPlayStateChange,
+  theme = "campus",
+  isExhausted = false,
 }) {
-  const trackList  = ALL_TRACKS;
+  const [customTracks, setCustomTracks] = useState([]);
+
+  useEffect(() => {
+    const loaded = getCustomTracks();
+    setCustomTracks(loaded);
+  }, [currentTrackId]);
+
+  const trackList  = [...ALL_TRACKS, ...customTracks];
   const trackIndex = Math.max(0, trackList.findIndex((t) => t.id === currentTrackId));
   const track      = trackList[trackIndex] || trackList[0];
 
@@ -378,6 +393,17 @@ export default function Player({
     }
   }, []);
 
+  const playCustomTrack = useCallback((trackObj) => {
+    setCurrentTrackId(trackObj.id);
+    setLoadError(null);
+    const audio = audioRef.current;
+    if (!audio) return;
+    playOnLoadRef.current = true;
+    audio.src = trackObj.audioUrl;
+    audio.volume = volumeRef.current / 100;
+    audio.muted = false;
+  }, [setCurrentTrackId]);
+
   /* ── Register hotkey handlers ──────────────────────── */
   useEffect(() => {
     onRegisterHandlers?.({
@@ -386,8 +412,9 @@ export default function Player({
       nextTrack:     handleNext,
       prevTrack:     handlePrev,
       pause:         handlePause,
+      playTrack:     playCustomTrack,
     });
-  }, [handleToggle, handleToggleMute, handleNext, handlePrev, onRegisterHandlers, handlePause]);
+  }, [handleToggle, handleToggleMute, handleNext, handlePrev, onRegisterHandlers, handlePause, playCustomTrack]);
 
   /* ── Theme change → switch playlist ───────────────── */
   const firstMountRef = useRef(true);
@@ -402,22 +429,72 @@ export default function Player({
 
   const volLevel = muted ? 0 : volume;
 
+  const themeContainerClass =
+    theme === "street"
+      ? playing
+        ? "border-sky-400/30 bg-gradient-to-r from-[#0f172a]/70 via-[#0b1120]/75 to-[#070d18]/80 shadow-[0_12px_35px_rgba(0,0,0,0.6),0_0_25px_rgba(56,189,248,0.15),inset_0_1px_1px_rgba(56,189,248,0.15)]"
+        : "border-white/12 bg-gradient-to-r from-[#0f172a]/45 via-[#0b1120]/55 to-[#070d18]/65 shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+      : theme === "hiphop"
+      ? playing
+        ? "border-purple-500/30 bg-gradient-to-r from-[#1e132e]/70 via-[#130d20]/75 to-[#0c0716]/80 shadow-[0_12px_35px_rgba(0,0,0,0.6),0_0_25px_rgba(168,85,247,0.15),inset_0_1px_1px_rgba(192,132,252,0.15)]"
+        : "border-white/12 bg-gradient-to-r from-[#1e132e]/45 via-[#130d20]/55 to-[#0c0716]/65 shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+      : isExhausted
+      ? playing
+        ? "border-teal-400/30 bg-gradient-to-r from-[#0d2222]/70 via-[#081818]/75 to-[#051111]/80 shadow-[0_12px_35px_rgba(0,0,0,0.6),0_0_25px_rgba(45,212,191,0.15),inset_0_1px_1px_rgba(45,212,191,0.15)]"
+        : "border-white/12 bg-gradient-to-r from-[#0d2222]/45 via-[#081818]/55 to-[#051111]/65 shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+      : playing
+      ? "border-amber-400/30 bg-gradient-to-r from-[#1c1815]/70 via-[#141215]/75 to-[#0f0e11]/80 shadow-[0_12px_35px_rgba(0,0,0,0.6),0_0_25px_rgba(245,158,11,0.15),inset_0_1px_1px_rgba(251,191,36,0.15)]"
+      : "border-white/12 bg-gradient-to-r from-[#1c1815]/45 via-[#141215]/55 to-[#0f0e11]/65 shadow-[0_10px_30px_rgba(0,0,0,0.5)]";
+
+  const moodAccent =
+    theme === "street"
+      ? {
+          playBtn: "bg-sky-400 text-ink shadow-[0_0_20px_rgba(56,189,248,0.5)] scale-105",
+          eq: "bg-sky-400/90",
+          seek: "bg-sky-400",
+          aura: "bg-sky-400/25",
+          halo: "shadow-[0_0_20px_rgba(56,189,248,0.35)]",
+        }
+      : theme === "hiphop"
+      ? {
+          playBtn: "bg-purple-400 text-ink shadow-[0_0_20px_rgba(168,85,247,0.5)] scale-105",
+          eq: "bg-purple-400/90",
+          seek: "bg-purple-400",
+          aura: "bg-purple-400/25",
+          halo: "shadow-[0_0_20px_rgba(168,85,247,0.35)]",
+        }
+      : isExhausted
+      ? {
+          playBtn: "bg-teal-400 text-ink shadow-[0_0_20px_rgba(45,212,191,0.5)] scale-105",
+          eq: "bg-teal-400/90",
+          seek: "bg-teal-400",
+          aura: "bg-teal-400/25",
+          halo: "shadow-[0_0_20px_rgba(45,212,191,0.35)]",
+        }
+      : {
+          playBtn: "bg-amber-400 text-ink shadow-[0_0_20px_rgba(245,158,11,0.5)] scale-105",
+          eq: "bg-amber-400/90",
+          seek: "bg-amber-400",
+          aura: "bg-amber-400/25",
+          halo: "shadow-[0_0_20px_rgba(245,158,11,0.35)]",
+        };
+
+  const themePlayBtnClass = playing ? moodAccent.playBtn : "bg-paper text-ink hover:bg-white hover:scale-105";
+
   /* ── Render ────────────────────────────────────────── */
   return (
     <div className="relative w-full max-w-2xl mx-auto px-4">
       {/* NO <audio> JSX element — we manage it imperatively via audioRef */}
 
-      <div className={`rounded-[24px] sm:rounded-full border transition-[background-color,border-color,box-shadow] duration-500 transform-gpu ${
-        playing ? "border-amber/30 bg-black/60 shadow-[0_0_30px_rgba(232,163,74,0.15)]" : "border-white/10 bg-black/40"
-      } backdrop-blur-2xl p-3 sm:p-2.5 sm:pr-4`}>
+      <div className={`rounded-[24px] sm:rounded-full border transition-all duration-700 transform-gpu ${themeContainerClass} backdrop-blur-3xl p-3 sm:p-2.5 sm:pr-4`}>
 
         {/* ── Desktop ── */}
         <div className="hidden sm:flex items-center gap-3">
-          <Vinyl playing={playing} track={track} />
+          <Vinyl playing={playing} track={track} moodAura={moodAccent.aura} moodHalo={moodAccent.halo} />
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <Equalizer playing={playing} />
+              <Equalizer playing={playing} colorClass={moodAccent.eq} />
               <div className="min-w-0">
                 <p className="truncate font-display italic text-[15px] text-paper leading-tight">{track.title}</p>
                 {loadError
@@ -427,7 +504,7 @@ export default function Player({
             </div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10px] tabular-nums text-paper/40 w-7">{formatTime(currentTime)}</span>
-              <SeekBar currentTime={currentTime} duration={duration} onSeek={handleSeek} />
+              <SeekBar currentTime={currentTime} duration={duration} onSeek={handleSeek} seekFill={moodAccent.seek} />
               <span className="font-mono text-[10px] tabular-nums text-paper/40 w-7 text-right">{formatTime(duration)}</span>
             </div>
           </div>
@@ -441,21 +518,20 @@ export default function Player({
               <span className="flex items-center gap-1">
                 <IconTimer />
                 {activeTimerSeconds > 0 && (
-                  <span className="font-mono text-[9px] font-bold text-amber-300">
+                  <span className="font-mono text-[9px] font-bold text-white">
                     {Math.ceil(activeTimerSeconds / 60)}m
                   </span>
                 )}
               </span>
             </Pill>
-            <Pill onClick={onOpenStats}       title="Listening Stats & History"><IconStats /></Pill>
+            <Pill onClick={onOpenPlaylist}   title="Personal Library & Custom Playlists"><IconPlaylist /></Pill>
+            <Pill onClick={onOpenStats}      title="Listening Stats & History"><IconStats /></Pill>
           </div>
 
           <div className="flex items-center gap-1 pl-1">
             <button type="button" onClick={handlePrev} className="p-1.5 text-paper/50 hover:text-paper transition-colors cursor-pointer" aria-label="Previous"><IconPrev /></button>
             <button type="button" onClick={handleToggle}
-              className={`flex h-11 w-11 items-center justify-center rounded-full transition-all cursor-pointer shadow-lg active:scale-95 ${
-                playing ? "bg-amber text-ink shadow-[0_0_20px_rgba(232,163,74,0.6)] scale-105" : "bg-paper text-ink hover:bg-white hover:scale-105"
-              }`}
+              className={`flex h-11 w-11 items-center justify-center rounded-full transition-all cursor-pointer shadow-lg active:scale-95 ${themePlayBtnClass}`}
               aria-label={playing ? "Pause" : "Play"}>
               {playing ? <IconPause /> : <IconPlay />}
             </button>
@@ -473,10 +549,10 @@ export default function Player({
         {/* ── Mobile ── */}
         <div className="sm:hidden space-y-3">
           <div className="flex items-center gap-3">
-            <Vinyl playing={playing} track={track} />
+            <Vinyl playing={playing} track={track} moodAura={moodAccent.aura} moodHalo={moodAccent.halo} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <Equalizer playing={playing} />
+                <Equalizer playing={playing} colorClass={moodAccent.eq} />
                 <p className="truncate font-display italic text-[15px] text-paper leading-tight">{track.title}</p>
               </div>
               {loadError
@@ -485,16 +561,14 @@ export default function Player({
             </div>
           </div>
 
-          <SeekBar currentTime={currentTime} duration={duration} onSeek={handleSeek} />
+          <SeekBar currentTime={currentTime} duration={duration} onSeek={handleSeek} seekFill={moodAccent.seek} />
 
           <div className="flex items-center justify-between">
             <span className="font-mono text-[10px] tabular-nums text-paper/40">{formatTime(currentTime)}</span>
             <div className="flex items-center gap-4">
               <button type="button" onClick={handlePrev} className="p-2 text-paper/60 hover:text-paper cursor-pointer" aria-label="Previous"><IconPrev /></button>
               <button type="button" onClick={handleToggle}
-                className={`flex h-12 w-12 items-center justify-center rounded-full cursor-pointer transition-all active:scale-95 ${
-                  playing ? "bg-amber text-ink shadow-[0_0_20px_rgba(232,163,74,0.6)] scale-105" : "bg-paper text-ink hover:bg-white"
-                }`}
+                className={`flex h-12 w-12 items-center justify-center rounded-full cursor-pointer transition-all active:scale-95 ${themePlayBtnClass}`}
                 aria-label={playing ? "Pause" : "Play"}>
                 {playing ? <IconPause /> : <IconPlay />}
               </button>
@@ -511,12 +585,13 @@ export default function Player({
               <span className="flex items-center gap-0.5">
                 <IconTimer />
                 {activeTimerSeconds > 0 && (
-                  <span className="font-mono text-[8px] font-bold text-amber-300">
+                  <span className="font-mono text-[8px] font-bold text-white">
                     {Math.ceil(activeTimerSeconds / 60)}m
                   </span>
                 )}
               </span>
             </Pill>
+            <Pill onClick={onOpenPlaylist}   title="Personal Library"><IconPlaylist /></Pill>
             <Pill onClick={onOpenStats}      title="Listening Stats"><IconStats /></Pill>
             <Pill onClick={() => setShowMobileVol(v => !v)} title="Volume"><IconVolume level={volLevel} /></Pill>
           </div>

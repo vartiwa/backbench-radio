@@ -19,6 +19,7 @@ function getDefaultStats() {
       campus: 0,
       street: 0,
       hiphop: 0,
+      sanctuary: 0,
     },
     totalSeconds: 0,
     lastActiveDate: today,
@@ -40,7 +41,8 @@ export function getListeningStats() {
     // Ensure today's entry exists
     if (!data.days) data.days = {};
     if (!data.days[today]) data.days[today] = 0;
-    if (!data.themes) data.themes = { campus: 0, street: 0, hiphop: 0 };
+    if (!data.themes) data.themes = { campus: 0, street: 0, hiphop: 0, sanctuary: 0 };
+    if (typeof data.themes.sanctuary !== "number") data.themes.sanctuary = 0;
     if (typeof data.totalSeconds !== "number") data.totalSeconds = 0;
 
     // Prune days older than 45 days to keep localStorage lightweight

@@ -13,6 +13,9 @@ import KineticTitle from "./KineticTitle";
 import ListeningBadge from "./ListeningBadge";
 import ListeningStatsModal from "./ListeningStatsModal";
 import FocusTimerModal from "./FocusTimerModal";
+import PlaylistModal from "./PlaylistModal";
+import IntroLoader from "./IntroLoader";
+import InstructionGuide from "./InstructionGuide";
 import { playAlarmSound, stopAlarmPreview } from "../lib/alarmEngine";
 import { getListeningStats, recordListeningDelta, getLocalDateKey } from "../lib/listeningStats";
 import { THEMES, DEFAULT_THEME } from "../lib/theme";
@@ -35,6 +38,7 @@ export default function Experience() {
   const [isExhausted, setIsExhausted] = useState(false);
   const [isGlitching, setIsGlitching] = useState(false);
   const [todaySeconds, setTodaySeconds] = useState(0);
+  const [showGuide, setShowGuide] = useState(false);
 
   // Unified Focus & Alarm Timer State
   const [timerState, setTimerState] = useState({
@@ -60,7 +64,8 @@ export default function Experience() {
     if (isPlaying) {
       interval = setInterval(() => {
         setTodaySeconds(() => {
-          const updated = recordListeningDelta(1, theme);
+          const activeMood = theme === "campus" && isExhausted ? "sanctuary" : theme;
+          const updated = recordListeningDelta(1, activeMood);
           return updated;
         });
       }, 1000);
@@ -68,7 +73,7 @@ export default function Experience() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isPlaying, theme]);
+  }, [isPlaying, theme, isExhausted]);
 
   // Pomodoro / Alarm Countdown ticker
   useEffect(() => {
@@ -299,6 +304,12 @@ export default function Experience() {
       onTouchEnd={handleTouchEnd}
       className="fade-in relative flex min-h-dvh h-screen w-screen flex-1 flex-col items-center justify-between overflow-hidden selection:bg-amber/30 select-none"
     >
+      {/* 3-Second Cinematic Preloader Overlay */}
+      <IntroLoader duration={3000} onComplete={() => setShowGuide(true)} />
+
+      {/* 5-Second Interactive Instruction Guide pointing to tools */}
+      <InstructionGuide isVisible={showGuide} duration={5000} onDismiss={() => setShowGuide(false)} />
+
       {/* Dynamic Interactive Atmosphere Particle Canvas */}
       <AtmosphereCanvas theme={theme} isPlaying={isPlaying} isExhausted={isExhausted} />
 
@@ -367,11 +378,13 @@ export default function Experience() {
         style={{ paddingTop: edge, paddingLeft: edgeL, paddingRight: edgeR }}
       >
         <div className="flex items-center gap-2.5">
-          <Clock />
-          <ListeningBadge
+          <Clock
             todaySeconds={todaySeconds}
             isPlaying={isPlaying}
-            onClick={() => setActiveModal((prev) => (prev === "stats" ? null : "stats"))}
+            theme={theme}
+            isExhausted={isExhausted}
+            onOpenStats={() => setActiveModal((prev) => (prev === "stats" ? null : "stats"))}
+            onOpenTimer={() => setActiveModal((prev) => (prev === "timer" ? null : "timer"))}
           />
         </div>
         <div className="flex items-center gap-2.5">
@@ -386,6 +399,7 @@ export default function Experience() {
             onTogglePlay={() => hotkeyHandlersRef.current.togglePlay?.()}
             onToggleMute={() => hotkeyHandlersRef.current.toggleMute?.()}
             onToggleStats={() => setActiveModal((prev) => (prev === "stats" ? null : "stats"))}
+            onTogglePlaylist={() => setActiveModal((prev) => (prev === "playlist" ? null : "playlist"))}
             onNextTrack={() => hotkeyHandlersRef.current.nextTrack?.()}
             onPrevTrack={() => hotkeyHandlersRef.current.prevTrack?.()}
           />
@@ -486,12 +500,15 @@ export default function Experience() {
           onOpenAmbient={() => setActiveModal('ambient')}
           onOpenSleepTimer={() => setActiveModal('timer')}
           onOpenStats={() => setActiveModal('stats')}
+          onOpenPlaylist={() => setActiveModal('playlist')}
           activeTimerSeconds={timerState.timeLeft}
           isTimerRunning={timerState.isRunning}
           currentTrackId={currentTrackId}
           setCurrentTrackId={setCurrentTrackId}
           onRegisterHandlers={handleRegisterHandlers}
           onPlayStateChange={setIsPlaying}
+          theme={theme}
+          isExhausted={isExhausted}
         />
 
         {/* Discreet Bottom Center Footer */}
@@ -557,9 +574,23 @@ export default function Experience() {
 
       {/* Modals */}
       <div className="z-50 relative">
+        <PlaylistModal
+          isOpen={activeModal === 'playlist'}
+          onClose={() => setActiveModal(null)}
+          onSwitchModal={(m) => setActiveModal(m)}
+          currentTrackId={currentTrackId}
+          isPlaying={isPlaying}
+          onSelectTrack={(track) => {
+            setCurrentTrackId(track.id);
+            hotkeyHandlersRef.current?.playTrack?.(track);
+          }}
+          onPlayPauseToggle={() => hotkeyHandlersRef.current?.togglePlay?.()}
+        />
+
         <AmbientMixer 
           isOpen={activeModal === 'ambient'} 
           onClose={() => setActiveModal(null)} 
+          onSwitchModal={(m) => setActiveModal(m)}
           volumes={ambientVolumes}
           onVolumeChange={handleAmbientVolumeChange}
         />
@@ -567,6 +598,7 @@ export default function Experience() {
         <FocusTimerModal
           isOpen={activeModal === 'timer'}
           onClose={() => setActiveModal(null)}
+          onSwitchModal={(m) => setActiveModal(m)}
           timerState={timerState}
           onStartTimer={handleStartTimer}
           onPauseTimer={handlePauseTimer}
@@ -578,6 +610,7 @@ export default function Experience() {
         <ListeningStatsModal
           isOpen={activeModal === 'stats'}
           onClose={() => setActiveModal(null)}
+          onSwitchModal={(m) => setActiveModal(m)}
           todaySeconds={todaySeconds}
           isPlaying={isPlaying}
           currentTheme={theme}

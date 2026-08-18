@@ -18,7 +18,7 @@ const ContentSecurityPolicy = `
   font-src 'self'
     https://fonts.gstatic.com;
   img-src 'self' data: blob: https:;
-  media-src 'self' blob:;
+  media-src 'self' blob: data: https:;
   connect-src 'self'
     https://vitals.vercel-insights.com
     https://va.vercel-scripts.com;
