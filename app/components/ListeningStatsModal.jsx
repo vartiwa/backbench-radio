@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { X, Flame, Clock, Calendar, Trophy, RotateCcw, Sparkles } from "lucide-react";
+import { X, RotateCcw, Activity, Disc3, Radio, ShieldCheck } from "lucide-react";
 import {
   getListeningStats,
   formatListeningDuration,
   getLast7DaysHistory,
   getListeningMilestones,
-  saveListeningStats,
 } from "../lib/listeningStats";
 
 export default function ListeningStatsModal({
@@ -20,7 +19,7 @@ export default function ListeningStatsModal({
   const [stats, setStats] = useState(null);
   const [history, setHistory] = useState([]);
   const [milestones, setMilestones] = useState([]);
-  const [hoveredBar, setHoveredBar] = useState(null);
+  const [hoveredDay, setHoveredDay] = useState(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Refresh stats whenever modal opens or todaySeconds updates
@@ -46,6 +45,14 @@ export default function ListeningStatsModal({
 
   if (!isOpen || !stats) return null;
 
+  // Format today's seconds into digital clock format HH:MM:SS
+  const formatDigital = (totalSec) => {
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
   // Compute daily average from active days
   const activeDays = Object.values(stats.days || {}).filter((s) => s > 0);
   const avgSeconds =
@@ -53,25 +60,15 @@ export default function ListeningStatsModal({
       ? Math.round(activeDays.reduce((a, b) => a + b, 0) / activeDays.length)
       : 0;
 
-  // Find top mood
-  const themes = stats.themes || {};
-  let topMoodKey = "campus";
-  let topMoodSeconds = 0;
-  for (const [key, val] of Object.entries(themes)) {
-    if (val > topMoodSeconds) {
-      topMoodSeconds = val;
-      topMoodKey = key;
-    }
-  }
+  // Theme distribution breakdown
+  const themes = stats.themes || { campus: 0, street: 0, hiphop: 0 };
+  const totalThemeSec = Math.max(1, (themes.campus || 0) + (themes.street || 0) + (themes.hiphop || 0));
+  const campusPct = Math.round(((themes.campus || 0) / totalThemeSec) * 100);
+  const streetPct = Math.round(((themes.street || 0) / totalThemeSec) * 100);
+  const hiphopPct = Math.max(0, 100 - campusPct - streetPct);
 
-  const moodLabels = {
-    campus: "🍂 Campus",
-    street: "🌧️ Rainy Night",
-    hiphop: "🎤 Hip Hop",
-  };
-
-  // Find max seconds for bar chart scaling
-  const maxBarSeconds = Math.max(...history.map((h) => h.seconds), 1800); // minimum 30 min scale
+  // Chart scaling
+  const maxBarSeconds = Math.max(...history.map((h) => h.seconds), 3600);
 
   const handleResetData = () => {
     if (typeof window !== "undefined") {
@@ -86,142 +83,173 @@ export default function ListeningStatsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md animate-fade-in select-none"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in select-none"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/15 bg-black/85 p-6 sm:p-8 text-paper shadow-2xl backdrop-blur-xl transition-all duration-300">
-        {/* Top Header */}
+      <div className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-2xl border border-white/15 bg-[#0a0c10]/95 text-paper shadow-[0_0_50px_rgba(0,0,0,0.9)] backdrop-blur-2xl p-6 sm:p-8 transition-all">
+        
+        {/* Studio Console Top Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-400/15 text-amber-400 border border-amber-400/30">
-              🎧
-            </span>
-            <div>
-              <h2 className="font-display italic text-xl sm:text-2xl text-paper tracking-tight">
-                Listening Journal
-              </h2>
-              <p className="font-mono text-[10px] sm:text-xs text-paper/50 tracking-wider uppercase">
-                Personal Activity & Multi-Day Track Record
-              </p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-500/10 text-amber-400">
+              <Activity size={15} />
             </div>
-          </div>
-
-          <button
-            onClick={onClose}
-            type="button"
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-paper/60 hover:text-paper hover:bg-white/10 transition-colors cursor-pointer"
-            aria-label="Close"
-          >
-            <X size={16} />
-          </button>
-        </div>
-
-        {/* Live Today's Time Spotlight Card */}
-        <div className="mt-6 rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-950/40 via-black/60 to-black/80 p-5 sm:p-6 shadow-[0_0_25px_rgba(245,158,11,0.15)] relative overflow-hidden">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
-                <span className="font-mono text-[11px] uppercase tracking-widest text-amber-300/90 font-medium">
-                  {isPlaying ? "Live Session Active" : "Today's Listening"}
+                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-amber-400 font-semibold">
+                  SYSTEM // TELEMETRY
+                </span>
+                <span className="h-1 w-1 rounded-full bg-white/30" />
+                <span className="font-mono text-[10px] text-paper/40 tracking-wider uppercase">
+                  DECK v2.4
                 </span>
               </div>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="font-display italic text-4xl sm:text-5xl text-paper font-semibold tracking-tight">
-                  {formatListeningDuration(todaySeconds, true)}
-                </span>
-              </div>
-              <p className="mt-1 font-mono text-[11px] text-paper/60">
-                {isPlaying
-                  ? "Music is currently playing and counting your focus time."
-                  : "Start playback anytime to track your listening time today."}
-              </p>
+              <h2 className="font-mono text-base sm:text-lg font-bold uppercase tracking-wider text-paper/95">
+                Acoustic Activity Journal
+              </h2>
             </div>
+          </div>
 
-            {/* Daily Streak Pill */}
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center min-w-[120px]">
-              <div className="flex items-center gap-1.5 text-orange-400">
-                <Flame size={18} className="animate-bounce" />
-                <span className="font-mono text-xl font-bold">
-                  {stats.currentStreak || 1}
-                </span>
-              </div>
-              <span className="font-mono text-[9px] uppercase tracking-wider text-paper/50 mt-0.5">
-                Day Streak
+          <div className="flex items-center gap-3">
+            {/* Live Indicator */}
+            <div className="hidden sm:flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-2.5 py-1">
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  isPlaying
+                    ? "bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"
+                    : "bg-paper/30"
+                }`}
+              />
+              <span className="font-mono text-[9px] uppercase tracking-widest text-paper/60">
+                {isPlaying ? "REC • LIVE" : "STANDBY"}
               </span>
             </div>
+
+            <button
+              onClick={onClose}
+              type="button"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-paper/60 hover:text-paper hover:bg-white/15 hover:border-white/25 transition-all cursor-pointer"
+              aria-label="Close"
+            >
+              <X size={15} />
+            </button>
           </div>
         </div>
 
-        {/* 7-Day Listening History Bar Chart */}
-        <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+        {/* Master Session Display (Hardware Meter Style) */}
+        <div className="mt-5 rounded-xl border border-white/10 bg-black/60 p-5 relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-paper/50">
+                TODAY'S SESSION DURATION
+              </p>
+              <div className="mt-1 flex items-baseline gap-3">
+                <span className="font-mono text-4xl sm:text-5xl font-bold tracking-tight text-amber-300 drop-shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                  {formatDigital(todaySeconds)}
+                </span>
+                <span className="font-mono text-xs text-paper/40 uppercase tracking-widest">
+                  [{formatListeningDuration(todaySeconds, false)}]
+                </span>
+              </div>
+            </div>
+
+            {/* Hardware Streak Block */}
+            <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5">
+              <div className="text-left font-mono">
+                <div className="text-[9px] uppercase tracking-[0.2em] text-paper/40">
+                  SEQUENCE STREAK
+                </div>
+                <div className="text-lg font-bold text-orange-400 tracking-wider">
+                  {String(stats.currentStreak || 1).padStart(2, "0")}{" "}
+                  <span className="text-xs font-normal text-paper/60">DAYS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Micro Status Bar */}
+          <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-paper/40">
+            <span>BITRATE: 320 KBPS / STEREO</span>
+            <span className="text-emerald-400/90 font-medium">
+              {isPlaying ? "AUDIO ENGINE STREAMING" : "AUDIO ENGINE PAUSED"}
+            </span>
+          </div>
+        </div>
+
+        {/* 7-Day Precision Histogram / Spectrogram Bar Array */}
+        <div className="mt-5 rounded-xl border border-white/10 bg-black/40 p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Calendar size={15} className="text-amber-400" />
-              <h3 className="font-mono text-xs uppercase tracking-wider text-paper/80 font-medium">
-                Last 7 Days Activity
-              </h3>
+              <Disc3 size={14} className="text-amber-400" />
+              <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-paper/80 font-semibold">
+                7-Day Chronological Spectrum
+              </span>
             </div>
-            <span className="font-mono text-[10px] text-paper/40">
-              Total {formatListeningDuration(stats.totalSeconds)} all-time
+            <span className="font-mono text-[10px] text-paper/40 tracking-wider">
+              TOTAL: {formatListeningDuration(stats.totalSeconds)}
             </span>
           </div>
 
-          {/* Bar Visualizer */}
-          <div className="flex items-end justify-between gap-2 h-36 pt-4 pb-1 px-2 border-b border-white/10">
+          {/* Bar Visualizer Deck */}
+          <div className="relative flex items-end justify-between gap-2.5 h-32 pt-6 pb-2 px-3 border-b border-white/10 bg-black/40 rounded-lg">
+            {/* Horizontal Grid Baseline Indicators */}
+            <div className="absolute inset-x-3 top-4 border-b border-white/5" />
+            <div className="absolute inset-x-3 top-16 border-b border-white/5" />
+
             {history.map((day, idx) => {
               const heightPercent = Math.max(
-                6,
-                Math.round((day.seconds / maxBarSeconds) * 100)
+                4,
+                Math.min(100, Math.round((day.seconds / maxBarSeconds) * 100))
               );
-              const isHovered = hoveredBar === idx;
+              const isHovered = hoveredDay === idx;
 
               return (
                 <div
                   key={day.dateKey}
-                  onMouseEnter={() => setHoveredBar(idx)}
-                  onMouseLeave={() => setHoveredBar(null)}
+                  onMouseEnter={() => setHoveredDay(idx)}
+                  onMouseLeave={() => setHoveredDay(null)}
                   className="group relative flex-1 flex flex-col items-center h-full justify-end cursor-pointer"
                 >
-                  {/* Tooltip on hover */}
+                  {/* Floating Telemetry readout */}
                   {isHovered && (
-                    <div className="absolute -top-10 z-20 whitespace-nowrap rounded-lg border border-white/20 bg-black/95 px-2.5 py-1 text-center shadow-xl backdrop-blur-md animate-fade-in">
-                      <p className="font-mono text-[10px] text-amber-300 font-bold">
-                        {formatListeningDuration(day.seconds, true)}
-                      </p>
-                      <p className="font-mono text-[8px] text-paper/50">
-                        {day.fullDate}
-                      </p>
+                    <div className="absolute -top-10 z-30 whitespace-nowrap rounded border border-amber-400/40 bg-black/95 px-2 py-0.5 text-center shadow-2xl backdrop-blur-md">
+                      <span className="font-mono text-[9px] text-amber-300 font-bold tracking-tight">
+                        {day.fullDate} // {formatListeningDuration(day.seconds, true)}
+                      </span>
                     </div>
                   )}
 
-                  {/* Vertical Bar */}
+                  {/* High-tech Hairline Top Bar */}
                   <div
                     style={{ height: `${heightPercent}%` }}
-                    className={`w-full max-w-[28px] rounded-t-lg transition-all duration-500 ${
+                    className={`w-full max-w-[24px] rounded-t transition-all duration-300 relative ${
                       day.isToday
-                        ? "bg-gradient-to-t from-amber-500 to-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.5)]"
+                        ? "bg-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.6)]"
                         : day.seconds > 0
-                        ? "bg-gradient-to-t from-teal-700/80 to-teal-400/90 group-hover:from-teal-600 group-hover:to-teal-300 shadow-[0_0_8px_rgba(45,212,191,0.3)]"
+                        ? "bg-teal-400/80 group-hover:bg-teal-300 shadow-[0_0_8px_rgba(45,212,191,0.4)]"
                         : "bg-white/10 group-hover:bg-white/20"
                     }`}
-                  />
+                  >
+                    {day.seconds > 0 && (
+                      <div className="absolute top-0 inset-x-0 h-0.5 bg-white shadow-sm" />
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Day Labels */}
-          <div className="flex items-center justify-between gap-2 mt-2 px-2">
+          {/* X-Axis Labels */}
+          <div className="flex items-center justify-between gap-2.5 mt-2 px-3">
             {history.map((day) => (
-              <div key={day.dateKey} className="flex-1 text-center">
+              <div key={day.dateKey} className="flex-1 text-center font-mono">
                 <span
-                  className={`font-mono text-[10px] tracking-tight block ${
+                  className={`text-[9px] tracking-wider uppercase block ${
                     day.isToday
                       ? "text-amber-400 font-bold"
-                      : "text-paper/50"
+                      : "text-paper/40"
                   }`}
                 >
                   {day.dayName}
@@ -231,75 +259,125 @@ export default function ListeningStatsModal({
           </div>
         </div>
 
-        {/* Quick Stats Grid */}
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 flex flex-col justify-between">
-            <div className="flex items-center gap-1.5 text-paper/50 font-mono text-[10px] uppercase">
-              <Clock size={12} className="text-teal-400" />
-              <span>Daily Average</span>
+        {/* 4-Corner Telemetry Grid */}
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5 font-mono">
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="text-[9px] uppercase tracking-[0.2em] text-paper/40">
+              [01] DAILY AVG
             </div>
-            <p className="font-mono text-base font-bold text-paper mt-1">
+            <div className="text-sm sm:text-base font-bold text-paper mt-1">
               {formatListeningDuration(avgSeconds)}
-            </p>
+            </div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 flex flex-col justify-between">
-            <div className="flex items-center gap-1.5 text-paper/50 font-mono text-[10px] uppercase">
-              <Trophy size={12} className="text-amber-400" />
-              <span>All-Time</span>
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="text-[9px] uppercase tracking-[0.2em] text-paper/40">
+              [02] TOTAL TIME
             </div>
-            <p className="font-mono text-base font-bold text-paper mt-1">
+            <div className="text-sm sm:text-base font-bold text-paper mt-1">
               {formatListeningDuration(stats.totalSeconds)}
-            </p>
+            </div>
           </div>
 
-          <div className="col-span-2 sm:col-span-1 rounded-xl border border-white/10 bg-white/5 p-3.5 flex flex-col justify-between">
-            <div className="flex items-center gap-1.5 text-paper/50 font-mono text-[10px] uppercase">
-              <Sparkles size={12} className="text-pink-400" />
-              <span>Top Mood</span>
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="text-[9px] uppercase tracking-[0.2em] text-paper/40">
+              [03] ACTIVE LOGS
             </div>
-            <p className="font-mono text-xs font-semibold text-paper mt-1 truncate">
-              {moodLabels[topMoodKey] || "🍂 Campus"}
-            </p>
+            <div className="text-sm sm:text-base font-bold text-teal-300 mt-1">
+              {activeDays.length} DAYS
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="text-[9px] uppercase tracking-[0.2em] text-paper/40">
+              [04] STREAK
+            </div>
+            <div className="text-sm sm:text-base font-bold text-orange-400 mt-1">
+              {stats.currentStreak || 1} DAYS
+            </div>
           </div>
         </div>
 
-        {/* Backbench Milestones */}
-        <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Trophy size={15} className="text-amber-400" />
-            <h3 className="font-mono text-xs uppercase tracking-wider text-paper/80 font-medium">
-              Listening Milestones
-            </h3>
+        {/* Station Affinity Spectrum */}
+        <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-4 font-mono">
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-paper/50 mb-2">
+            <span className="flex items-center gap-1.5">
+              <Radio size={12} className="text-amber-400" />
+              <span>Station Affinity Spectrum</span>
+            </span>
+            <span className="text-paper/40">100% TELEMETRY</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          {/* Segmented multi-color bar */}
+          <div className="h-2 w-full rounded-full bg-white/10 flex overflow-hidden">
+            <div
+              style={{ width: `${campusPct}%` }}
+              className="h-full bg-amber-400 transition-all duration-500"
+              title={`Campus: ${campusPct}%`}
+            />
+            <div
+              style={{ width: `${streetPct}%` }}
+              className="h-full bg-sky-400 transition-all duration-500"
+              title={`Rainy Night: ${streetPct}%`}
+            />
+            <div
+              style={{ width: `${hiphopPct}%` }}
+              className="h-full bg-orange-500 transition-all duration-500"
+              title={`Hip Hop: ${hiphopPct}%`}
+            />
+          </div>
+
+          {/* Legends */}
+          <div className="flex items-center justify-between text-[9px] text-paper/60 mt-2">
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+              Campus {campusPct}%
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+              Rainy Night {streetPct}%
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+              Hip Hop {hiphopPct}%
+            </span>
+          </div>
+        </div>
+
+        {/* Acoustic Clearance Tiers */}
+        <div className="mt-5 rounded-xl border border-white/10 bg-black/40 p-4 font-mono">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-paper/60 font-semibold flex items-center gap-1.5">
+              <ShieldCheck size={13} className="text-teal-400" />
+              <span>Acoustic Clearance Tiers</span>
+            </span>
+            <span className="text-[9px] text-paper/40 uppercase">
+              {milestones.filter((m) => m.unlocked).length} / {milestones.length} CLEARED
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {milestones.map((m) => (
               <div
                 key={m.id}
-                className={`rounded-xl border p-2.5 transition-all ${
+                className={`rounded-lg border p-2.5 transition-all text-left ${
                   m.unlocked
-                    ? "border-amber-400/40 bg-amber-950/20 shadow-[0_0_10px_rgba(245,158,11,0.15)]"
-                    : "border-white/5 bg-black/40 opacity-50"
+                    ? "border-amber-400/40 bg-amber-950/20 text-paper shadow-[0_0_10px_rgba(245,158,11,0.1)]"
+                    : "border-white/5 bg-white/[0.02] text-paper/40"
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{m.icon}</span>
-                  <div className="min-w-0">
-                    <p className="font-mono text-[11px] font-bold text-paper truncate">
-                      {m.title}
-                    </p>
-                    <p className="font-mono text-[9px] text-paper/50 truncate">
-                      {m.desc}
-                    </p>
-                  </div>
+                <div className="flex items-center justify-between text-[9px] uppercase tracking-wider mb-1">
+                  <span className={m.unlocked ? "text-amber-400 font-bold" : "text-paper/40"}>
+                    {m.title}
+                  </span>
+                  <span>{m.unlocked ? "✓ PASS" : `${Math.round(m.progress * 100)}%`}</span>
                 </div>
-                {/* Progress bar */}
-                <div className="mt-2 h-1 w-full rounded-full bg-white/10 overflow-hidden">
+                <p className="text-[8px] text-paper/50 tracking-tight truncate">{m.desc}</p>
+                <div className="mt-1.5 h-1 w-full rounded-full bg-white/10 overflow-hidden">
                   <div
                     style={{ width: `${m.progress * 100}%` }}
                     className={`h-full rounded-full ${
-                      m.unlocked ? "bg-amber-400 shadow-[0_0_6px_#fbbf24]" : "bg-teal-500"
+                      m.unlocked ? "bg-amber-400 shadow-[0_0_4px_#fbbf24]" : "bg-teal-500/70"
                     }`}
                   />
                 </div>
@@ -308,33 +386,35 @@ export default function ListeningStatsModal({
           </div>
         </div>
 
-        {/* Footer actions */}
-        <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+        {/* Footer Actions */}
+        <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between font-mono">
           {!showResetConfirm ? (
             <button
               onClick={() => setShowResetConfirm(true)}
               type="button"
-              className="inline-flex items-center gap-1.5 text-[10px] font-mono text-paper/30 hover:text-rose-400 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-widest text-paper/30 hover:text-rose-400 transition-colors cursor-pointer"
             >
-              <RotateCcw size={11} />
-              <span>Reset stats</span>
+              <RotateCcw size={10} />
+              <span>PURGE LOCAL TELEMETRY</span>
             </button>
           ) : (
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] text-rose-400">Clear all listening history?</span>
+              <span className="text-[9px] text-rose-400 tracking-wider uppercase">
+                Confirm Purge?
+              </span>
               <button
                 onClick={handleResetData}
                 type="button"
-                className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 hover:bg-rose-500/40 text-[10px] font-mono transition-colors cursor-pointer"
+                className="px-2 py-0.5 rounded border border-rose-500/40 bg-rose-500/20 text-rose-300 text-[9px] uppercase tracking-wider hover:bg-rose-500/40 transition-colors cursor-pointer font-bold"
               >
-                Yes, Clear
+                EXECUTE
               </button>
               <button
                 onClick={() => setShowResetConfirm(false)}
                 type="button"
-                className="px-2 py-0.5 rounded bg-white/10 text-paper/70 hover:bg-white/20 text-[10px] font-mono transition-colors cursor-pointer"
+                className="px-2 py-0.5 rounded border border-white/10 bg-white/5 text-paper/60 text-[9px] uppercase tracking-wider hover:bg-white/15 transition-colors cursor-pointer"
               >
-                Cancel
+                CANCEL
               </button>
             </div>
           )}
@@ -342,9 +422,9 @@ export default function ListeningStatsModal({
           <button
             onClick={onClose}
             type="button"
-            className="rounded-full border border-white/15 bg-white/10 px-5 py-1.5 font-mono text-xs uppercase tracking-wider text-paper hover:bg-white/20 transition-all cursor-pointer font-medium"
+            className="rounded-lg border border-white/20 bg-white/10 px-5 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-paper hover:bg-white/20 hover:border-white/40 transition-all cursor-pointer font-semibold"
           >
-            Close
+            DISMISS
           </button>
         </div>
       </div>

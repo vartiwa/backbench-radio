@@ -418,7 +418,16 @@ export default function Player({
             <Pill onClick={() => setRepeat(p => !p)}  active={repeat}  title="Repeat"><IconRepeat /></Pill>
             <div className="w-px h-4 bg-white/10 mx-1" />
             <Pill onClick={onOpenAmbient}     title="Ambient Sounds"><IconMix /></Pill>
-            <Pill onClick={onOpenSleepTimer}  active={activeTimerSeconds > 0} title="Sleep Timer"><IconTimer /></Pill>
+            <Pill onClick={onOpenSleepTimer}  active={activeTimerSeconds > 0} title={activeTimerSeconds > 0 ? `Timer Active: ${formatTime(activeTimerSeconds)}` : "Focus Timer & Alarm"}>
+              <span className="flex items-center gap-1">
+                <IconTimer />
+                {activeTimerSeconds > 0 && (
+                  <span className="font-mono text-[9px] font-bold text-amber-300">
+                    {Math.ceil(activeTimerSeconds / 60)}m
+                  </span>
+                )}
+              </span>
+            </Pill>
             <Pill onClick={onOpenStats}       title="Listening Stats & History"><IconStats /></Pill>
           </div>
 
@@ -479,7 +488,16 @@ export default function Player({
             <Pill onClick={() => setShuffle(p => !p)} active={shuffle} title="Shuffle"><IconShuffle /></Pill>
             <Pill onClick={() => setRepeat(p => !p)}  active={repeat}  title="Repeat"><IconRepeat /></Pill>
             <Pill onClick={onOpenAmbient}    title="Ambient"><IconMix /></Pill>
-            <Pill onClick={onOpenSleepTimer} active={activeTimerSeconds > 0} title="Timer"><IconTimer /></Pill>
+            <Pill onClick={onOpenSleepTimer} active={activeTimerSeconds > 0} title={activeTimerSeconds > 0 ? `Timer: ${formatTime(activeTimerSeconds)}` : "Timer"}>
+              <span className="flex items-center gap-0.5">
+                <IconTimer />
+                {activeTimerSeconds > 0 && (
+                  <span className="font-mono text-[8px] font-bold text-amber-300">
+                    {Math.ceil(activeTimerSeconds / 60)}m
+                  </span>
+                )}
+              </span>
+            </Pill>
             <Pill onClick={onOpenStats}      title="Listening Stats"><IconStats /></Pill>
             <Pill onClick={() => setShowMobileVol(v => !v)} title="Volume"><IconVolume level={volLevel} /></Pill>
           </div>

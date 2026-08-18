@@ -5,13 +5,14 @@ import Clock from "./Clock";
 import Player from "./Player";
 import ThemeToggle from "./ThemeToggle";
 import AmbientMixer from "./AmbientMixer";
-import SleepTimer from "./SleepTimer";
 import KeyboardShortcuts from "./KeyboardShortcuts";
 import FullscreenToggle from "./FullscreenToggle";
 import AtmosphereCanvas from "./AtmosphereCanvas";
 import KineticTitle from "./KineticTitle";
 import ListeningBadge from "./ListeningBadge";
 import ListeningStatsModal from "./ListeningStatsModal";
+import FocusTimerModal from "./FocusTimerModal";
+import { playAlarmSound, stopAlarmPreview } from "../lib/alarmEngine";
 import { getListeningStats, recordListeningDelta, getLocalDateKey } from "../lib/listeningStats";
 import { THEMES, DEFAULT_THEME } from "../lib/theme";
 import { ALL_TRACKS } from "../lib/tracks";
@@ -33,6 +34,17 @@ export default function Experience() {
   const [isExhausted, setIsExhausted] = useState(false);
   const [isGlitching, setIsGlitching] = useState(false);
   const [todaySeconds, setTodaySeconds] = useState(0);
+
+  // Unified Focus & Alarm Timer State
+  const [timerState, setTimerState] = useState({
+    mode: "focus", // 'focus' | 'break' | 'custom' | 'sleep'
+    timeLeft: 0,
+    totalDuration: 0,
+    isRunning: false,
+    round: 1,
+    selectedAlarmId: "chime-bell",
+  });
+  const [ringingAlarm, setRingingAlarm] = useState(null);
 
   // Load initial today's listening time on mount
   useEffect(() => {
@@ -57,6 +69,92 @@ export default function Experience() {
     };
   }, [isPlaying, theme]);
 
+  // Pomodoro / Alarm Countdown ticker
+  useEffect(() => {
+    let interval;
+    if (timerState.isRunning && timerState.timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimerState((prev) => {
+          if (prev.timeLeft <= 1) {
+            // Timer expired!
+            if (prev.mode === "sleep") {
+              hotkeyHandlersRef.current.pause?.();
+            } else {
+              playAlarmSound(prev.selectedAlarmId);
+              setRingingAlarm({
+                id: prev.selectedAlarmId,
+                mode: prev.mode,
+                round: prev.round,
+              });
+            }
+            return {
+              ...prev,
+              timeLeft: 0,
+              isRunning: false,
+            };
+          }
+          return {
+            ...prev,
+            timeLeft: prev.timeLeft - 1,
+          };
+        });
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [timerState.isRunning, timerState.timeLeft]);
+
+  const handleDismissAlarm = () => {
+    stopAlarmPreview();
+    setRingingAlarm(null);
+  };
+
+  const handleStartBreak = () => {
+    stopAlarmPreview();
+    setRingingAlarm(null);
+    setTimerState((prev) => ({
+      ...prev,
+      mode: "break",
+      timeLeft: 5 * 60,
+      totalDuration: 5 * 60,
+      isRunning: true,
+    }));
+  };
+
+  const handleStartTimer = (seconds, mode, alarmId) => {
+    setTimerState((prev) => ({
+      mode,
+      timeLeft: seconds,
+      totalDuration: seconds,
+      isRunning: true,
+      round: mode === "focus" ? (prev.mode === "break" ? prev.round + 1 : 1) : 1,
+      selectedAlarmId: alarmId || prev.selectedAlarmId || "chime-bell",
+    }));
+    setActiveModal(null);
+  };
+
+  const handlePauseTimer = () => {
+    setTimerState((prev) => ({ ...prev, isRunning: false }));
+  };
+
+  const handleResumeTimer = () => {
+    setTimerState((prev) => ({ ...prev, isRunning: true }));
+  };
+
+  const handleStopTimer = () => {
+    setTimerState((prev) => ({
+      ...prev,
+      timeLeft: 0,
+      totalDuration: 0,
+      isRunning: false,
+    }));
+  };
+
+  const handleUpdateAlarmSound = (alarmId) => {
+    setTimerState((prev) => ({ ...prev, selectedAlarmId: alarmId }));
+  };
+
   const handleToggleExhausted = () => {
     setIsGlitching(true);
     setIsExhausted((prev) => !prev);
@@ -66,8 +164,7 @@ export default function Experience() {
   };
 
   // Modals state (mutual exclusion)
-  const [activeModal, setActiveModal] = useState(null); // 'ambient' | 'timer' | null
-  const [activeTimerSeconds, setActiveTimerSeconds] = useState(0);
+  const [activeModal, setActiveModal] = useState(null); // 'ambient' | 'timer' | 'stats' | null
 
   // Lifted ambient volumes state
   const [ambientVolumes, setAmbientVolumes] = useState({});
@@ -388,7 +485,8 @@ export default function Experience() {
           onOpenAmbient={() => setActiveModal('ambient')}
           onOpenSleepTimer={() => setActiveModal('timer')}
           onOpenStats={() => setActiveModal('stats')}
-          activeTimerSeconds={activeTimerSeconds}
+          activeTimerSeconds={timerState.timeLeft}
+          isTimerRunning={timerState.isRunning}
           currentTrackId={currentTrackId}
           setCurrentTrackId={setCurrentTrackId}
           onRegisterHandlers={handleRegisterHandlers}
@@ -412,6 +510,50 @@ export default function Experience() {
         </p>
       </div>
 
+      {/* Live Alarm Ringing Banner Overlay */}
+      {ringingAlarm && (
+        <div className="fixed top-6 inset-x-4 max-w-md mx-auto z-50 rounded-2xl border border-amber-400/80 bg-black/95 p-4 text-paper shadow-[0_0_40px_rgba(245,158,11,0.6)] backdrop-blur-2xl animate-fade-in font-mono">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-ink text-xl font-bold animate-pulse shadow-[0_0_15px_#f59e0b]">
+                ⏰
+              </span>
+              <div className="min-w-0">
+                <h4 className="text-xs uppercase tracking-wider text-amber-300 font-bold truncate">
+                  {ringingAlarm.mode === "focus"
+                    ? "🍅 FOCUS SESSION COMPLETE!"
+                    : ringingAlarm.mode === "break"
+                    ? "☕ BREAK TIME OVER!"
+                    : "⏰ ALARM TIME EXPIRED!"}
+                </h4>
+                <p className="text-[10px] text-paper/60 truncate mt-0.5">
+                  Alarm chime is actively playing
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {ringingAlarm.mode === "focus" && (
+                <button
+                  onClick={handleStartBreak}
+                  type="button"
+                  className="rounded-lg border border-teal-400/60 bg-teal-500/20 px-3 py-1.5 text-[10px] uppercase tracking-wider text-teal-200 font-bold hover:bg-teal-500/40 hover:border-teal-400 cursor-pointer transition-all shadow-[0_0_10px_rgba(45,212,191,0.2)]"
+                >
+                  Break 5m
+                </button>
+              )}
+              <button
+                onClick={handleDismissAlarm}
+                type="button"
+                className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] uppercase tracking-wider text-paper font-bold hover:bg-white/25 cursor-pointer transition-all"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modals */}
       <div className="z-50 relative">
         <AmbientMixer 
@@ -421,15 +563,15 @@ export default function Experience() {
           onVolumeChange={handleAmbientVolumeChange}
         />
 
-        <SleepTimer
+        <FocusTimerModal
           isOpen={activeModal === 'timer'}
           onClose={() => setActiveModal(null)}
-          onTimerExpire={() => {
-            hotkeyHandlersRef.current.pause?.();
-            setActiveModal(null);
-          }}
-          activeTimerSeconds={activeTimerSeconds}
-          setActiveTimerSeconds={setActiveTimerSeconds}
+          timerState={timerState}
+          onStartTimer={handleStartTimer}
+          onPauseTimer={handlePauseTimer}
+          onResumeTimer={handleResumeTimer}
+          onStopTimer={handleStopTimer}
+          onUpdateAlarmSound={handleUpdateAlarmSound}
         />
 
         <ListeningStatsModal
