@@ -384,6 +384,16 @@ export default function Player({
     }
   }, []);
 
+  const handlePlay = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.muted = false;
+    audio.volume = volumeRef.current / 100;
+    if (audio.paused) {
+      audio.play().catch((err) => console.warn("play() failed or waiting for user gesture:", err.message));
+    }
+  }, []);
+
   const handlePause = useCallback(() => audioRef.current?.pause(), []);
 
   /* ── Mute / Volume ─────────────────────────────────── */
@@ -432,6 +442,7 @@ export default function Player({
   /* ── Register hotkey handlers ──────────────────────── */
   useEffect(() => {
     onRegisterHandlers?.({
+      play:          handlePlay,
       togglePlay:    handleToggle,
       toggleMute:    handleToggleMute,
       nextTrack:     handleNext,
@@ -439,7 +450,7 @@ export default function Player({
       pause:         handlePause,
       playTrack:     playCustomTrack,
     });
-  }, [handleToggle, handleToggleMute, handleNext, handlePrev, onRegisterHandlers, handlePause, playCustomTrack]);
+  }, [handlePlay, handleToggle, handleToggleMute, handleNext, handlePrev, onRegisterHandlers, handlePause, playCustomTrack]);
 
   /* ── Theme change → switch playlist ───────────────── */
   const firstMountRef = useRef(true);

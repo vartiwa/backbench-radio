@@ -56,6 +56,19 @@ export default function Experience() {
     const initialStats = getListeningStats();
     const todayKey = getLocalDateKey();
     setTodaySeconds(initialStats.days?.[todayKey] || 0);
+
+    // First user gesture autoplay unlocker
+    const handleFirstGesture = () => {
+      hotkeyHandlersRef.current?.play?.();
+    };
+    window.addEventListener("click", handleFirstGesture, { once: true });
+    window.addEventListener("keydown", handleFirstGesture, { once: true });
+    window.addEventListener("touchstart", handleFirstGesture, { once: true });
+    return () => {
+      window.removeEventListener("click", handleFirstGesture);
+      window.removeEventListener("keydown", handleFirstGesture);
+      window.removeEventListener("touchstart", handleFirstGesture);
+    };
   }, []);
 
   // Real-time tracking timer when music is actively playing
@@ -305,10 +318,23 @@ export default function Experience() {
       className="fade-in relative flex min-h-dvh h-screen w-screen flex-1 flex-col items-center justify-between overflow-hidden selection:bg-amber/30 select-none"
     >
       {/* 3-Second Cinematic Preloader Overlay */}
-      <IntroLoader duration={3000} onComplete={() => setShowGuide(true)} />
+      <IntroLoader
+        duration={3000}
+        onComplete={() => {
+          setShowGuide(true);
+          hotkeyHandlersRef.current?.play?.();
+        }}
+      />
 
       {/* 5-Second Interactive Instruction Guide pointing to tools */}
-      <InstructionGuide isVisible={showGuide} duration={5000} onDismiss={() => setShowGuide(false)} />
+      <InstructionGuide
+        isVisible={showGuide}
+        duration={5000}
+        onDismiss={() => {
+          setShowGuide(false);
+          hotkeyHandlersRef.current?.play?.();
+        }}
+      />
 
       {/* Dynamic Interactive Atmosphere Particle Canvas */}
       <AtmosphereCanvas theme={theme} isPlaying={isPlaying} isExhausted={isExhausted} />
