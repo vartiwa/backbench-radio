@@ -57,17 +57,19 @@ export default function Experience() {
     const todayKey = getLocalDateKey();
     setTodaySeconds(initialStats.days?.[todayKey] || 0);
 
-    // First user gesture autoplay unlocker
+    // First user gesture autoplay unlocker (Desktop & Mobile)
     const handleFirstGesture = () => {
       hotkeyHandlersRef.current?.play?.();
     };
-    window.addEventListener("click", handleFirstGesture, { once: true });
-    window.addEventListener("keydown", handleFirstGesture, { once: true });
-    window.addEventListener("touchstart", handleFirstGesture, { once: true });
+    window.addEventListener("click", handleFirstGesture, { once: true, passive: true });
+    window.addEventListener("keydown", handleFirstGesture, { once: true, passive: true });
+    window.addEventListener("touchstart", handleFirstGesture, { once: true, passive: true });
+    window.addEventListener("pointerdown", handleFirstGesture, { once: true, passive: true });
     return () => {
       window.removeEventListener("click", handleFirstGesture);
       window.removeEventListener("keydown", handleFirstGesture);
       window.removeEventListener("touchstart", handleFirstGesture);
+      window.removeEventListener("pointerdown", handleFirstGesture);
     };
   }, []);
 

@@ -272,6 +272,10 @@ export default function Player({
     audio.src    = track.audioUrl;
     audio.volume = 0.8;
     audio.preload = "auto";
+    audio.playsInline = true;
+    audio.setAttribute("playsinline", "true");
+    audio.setAttribute("webkit-playsinline", "true");
+    audio.setAttribute("x-webkit-airplay", "allow");
     audioRef.current = audio;
 
     /* native event → React state (only update if this instance is still live) */

@@ -48,6 +48,8 @@ export default function IntroLoader({ duration = 3000, onComplete }) {
   return (
     <div
       onClick={() => handleFinish.current()}
+      onTouchStart={() => handleFinish.current()}
+      onPointerDown={() => handleFinish.current()}
       className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#07070b] text-paper select-none transition-opacity duration-700 ease-out cursor-pointer ${
         fading ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}

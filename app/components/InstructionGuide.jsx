@@ -47,6 +47,8 @@ export default function InstructionGuide({ duration = 5000, isVisible, onDismiss
   return (
     <div
       onClick={handleManualDismiss}
+      onTouchStart={handleManualDismiss}
+      onPointerDown={handleManualDismiss}
       className={`fixed inset-0 z-40 pointer-events-auto cursor-pointer select-none transition-opacity duration-700 ease-out ${
         fading ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
