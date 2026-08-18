@@ -10,6 +10,9 @@ import KeyboardShortcuts from "./KeyboardShortcuts";
 import FullscreenToggle from "./FullscreenToggle";
 import AtmosphereCanvas from "./AtmosphereCanvas";
 import KineticTitle from "./KineticTitle";
+import ListeningBadge from "./ListeningBadge";
+import ListeningStatsModal from "./ListeningStatsModal";
+import { getListeningStats, recordListeningDelta, getLocalDateKey } from "../lib/listeningStats";
 import { THEMES, DEFAULT_THEME } from "../lib/theme";
 import { ALL_TRACKS } from "../lib/tracks";
 
@@ -29,6 +32,30 @@ export default function Experience() {
   const [slideDirection, setSlideDirection] = useState("down");
   const [isExhausted, setIsExhausted] = useState(false);
   const [isGlitching, setIsGlitching] = useState(false);
+  const [todaySeconds, setTodaySeconds] = useState(0);
+
+  // Load initial today's listening time on mount
+  useEffect(() => {
+    const initialStats = getListeningStats();
+    const todayKey = getLocalDateKey();
+    setTodaySeconds(initialStats.days?.[todayKey] || 0);
+  }, []);
+
+  // Real-time tracking timer when music is actively playing
+  useEffect(() => {
+    let interval;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setTodaySeconds(() => {
+          const updated = recordListeningDelta(1, theme);
+          return updated;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isPlaying, theme]);
 
   const handleToggleExhausted = () => {
     setIsGlitching(true);
@@ -241,7 +268,14 @@ export default function Experience() {
         className="w-full flex items-start justify-between z-20"
         style={{ paddingTop: edge, paddingLeft: edgeL, paddingRight: edgeR }}
       >
-        <Clock />
+        <div className="flex items-center gap-2.5">
+          <Clock />
+          <ListeningBadge
+            todaySeconds={todaySeconds}
+            isPlaying={isPlaying}
+            onClick={() => setActiveModal((prev) => (prev === "stats" ? null : "stats"))}
+          />
+        </div>
         <div className="flex items-center gap-2.5">
           <ThemeToggle
             theme={theme}
@@ -253,6 +287,7 @@ export default function Experience() {
           <KeyboardShortcuts
             onTogglePlay={() => hotkeyHandlersRef.current.togglePlay?.()}
             onToggleMute={() => hotkeyHandlersRef.current.toggleMute?.()}
+            onToggleStats={() => setActiveModal((prev) => (prev === "stats" ? null : "stats"))}
             onNextTrack={() => hotkeyHandlersRef.current.nextTrack?.()}
             onPrevTrack={() => hotkeyHandlersRef.current.prevTrack?.()}
           />
@@ -352,6 +387,7 @@ export default function Experience() {
           preferredPlaylistId={active.playlistId}
           onOpenAmbient={() => setActiveModal('ambient')}
           onOpenSleepTimer={() => setActiveModal('timer')}
+          onOpenStats={() => setActiveModal('stats')}
           activeTimerSeconds={activeTimerSeconds}
           currentTrackId={currentTrackId}
           setCurrentTrackId={setCurrentTrackId}
@@ -394,6 +430,14 @@ export default function Experience() {
           }}
           activeTimerSeconds={activeTimerSeconds}
           setActiveTimerSeconds={setActiveTimerSeconds}
+        />
+
+        <ListeningStatsModal
+          isOpen={activeModal === 'stats'}
+          onClose={() => setActiveModal(null)}
+          todaySeconds={todaySeconds}
+          isPlaying={isPlaying}
+          currentTheme={theme}
         />
       </div>
     </main>

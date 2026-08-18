@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 const SHORTCUTS = [
   { key: "Space", action: "Play / Pause" },
   { key: "M", action: "Mute / Unmute" },
+  { key: "S", action: "Listening Stats" },
   { key: "→", action: "Next Track" },
   { key: "←", action: "Previous Track" },
   { key: "?", action: "Show Shortcuts" },
@@ -13,6 +14,7 @@ const SHORTCUTS = [
 export default function KeyboardShortcuts({
   onTogglePlay,
   onToggleMute,
+  onToggleStats,
   onNextTrack,
   onPrevTrack,
 }) {
@@ -35,6 +37,8 @@ export default function KeyboardShortcuts({
         onTogglePlay();
       } else if (e.key.toLowerCase() === "m") {
         onToggleMute();
+      } else if (e.key.toLowerCase() === "s") {
+        onToggleStats?.();
       } else if (e.key === "ArrowRight") {
         onNextTrack();
       } else if (e.key === "ArrowLeft") {
@@ -46,7 +50,7 @@ export default function KeyboardShortcuts({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onTogglePlay, onToggleMute, onNextTrack, onPrevTrack]);
+  }, [isOpen, onTogglePlay, onToggleMute, onToggleStats, onNextTrack, onPrevTrack]);
 
   return (
     <>

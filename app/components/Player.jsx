@@ -29,6 +29,11 @@ const IconVolume = ({ level }) => {
 };
 const IconMix   = () => <Icon d="M7 18h2V6H7v12zm4 4h2V2h-2v20zm-8-8h2v-4H3v4zm12 4h2V6h-2v12zm4-8v4h2v-4h-2z" size={14} />;
 const IconTimer = () => <Icon d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" size={14} />;
+const IconStats = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width={14} height={14} className="pointer-events-none shrink-0">
+    <path d="M18 20V10M12 20V4M6 20v-6" />
+  </svg>
+);
 
 /* ── Vinyl Disc ─────────────────────────────────────── */
 /* ── Realistic Vinyl Turntable Disc with Animated Tonearm ── */
@@ -193,7 +198,7 @@ function Pill({ onClick, active, title, children }) {
    PLAYER  —  imperative Audio object, same as test page
    ═══════════════════════════════════════════════════════ */
 export default function Player({
-  preferredPlaylistId, onOpenAmbient, onOpenSleepTimer,
+  preferredPlaylistId, onOpenAmbient, onOpenSleepTimer, onOpenStats,
   activeTimerSeconds, currentTrackId, setCurrentTrackId,
   onRegisterHandlers, onPlayStateChange,
 }) {
@@ -414,6 +419,7 @@ export default function Player({
             <div className="w-px h-4 bg-white/10 mx-1" />
             <Pill onClick={onOpenAmbient}     title="Ambient Sounds"><IconMix /></Pill>
             <Pill onClick={onOpenSleepTimer}  active={activeTimerSeconds > 0} title="Sleep Timer"><IconTimer /></Pill>
+            <Pill onClick={onOpenStats}       title="Listening Stats & History"><IconStats /></Pill>
           </div>
 
           <div className="flex items-center gap-1 pl-1">
@@ -474,6 +480,7 @@ export default function Player({
             <Pill onClick={() => setRepeat(p => !p)}  active={repeat}  title="Repeat"><IconRepeat /></Pill>
             <Pill onClick={onOpenAmbient}    title="Ambient"><IconMix /></Pill>
             <Pill onClick={onOpenSleepTimer} active={activeTimerSeconds > 0} title="Timer"><IconTimer /></Pill>
+            <Pill onClick={onOpenStats}      title="Listening Stats"><IconStats /></Pill>
             <Pill onClick={() => setShowMobileVol(v => !v)} title="Volume"><IconVolume level={volLevel} /></Pill>
           </div>
 
