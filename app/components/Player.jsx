@@ -185,10 +185,20 @@ function SeekBar({ currentTime, duration, onSeek }) {
 }
 
 /* ── Tiny Pill Button ───────────────────────────────── */
-function Pill({ onClick, active, title, children }) {
+function Pill({ onClick, active, highlight, title, children }) {
   return (
-    <button type="button" onClick={onClick} title={title}
-      className={`p-1.5 rounded-full transition-colors cursor-pointer ${active ? "text-amber" : "text-paper/40 hover:text-paper/70"}`}>
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      className={`relative p-1.5 rounded-full transition-all duration-500 cursor-pointer ${
+        highlight
+          ? "text-amber-300 bg-amber-400/25 ring-2 ring-amber-400/70 shadow-[0_0_16px_rgba(245,158,11,0.6)] scale-110 animate-pulse"
+          : active
+          ? "text-amber"
+          : "text-paper/40 hover:text-paper/70"
+      }`}
+    >
       {children}
     </button>
   );
@@ -216,6 +226,15 @@ export default function Player({
   const [shuffle,         setShuffle]         = useState(false);
   const [repeat,          setRepeat]          = useState(false);
   const [showMobileVol,   setShowMobileVol]   = useState(false);
+  const [showIntroFlash,  setShowIntroFlash]  = useState(true);
+
+  // 3-second flash on initial load to highlight ambient and timer
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowIntroFlash(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   /* ── Stable refs (never trigger re-render) ─────────── */
   const audioRef      = useRef(null);   // the Audio object
@@ -417,8 +436,8 @@ export default function Player({
             <Pill onClick={() => setShuffle(p => !p)} active={shuffle} title="Shuffle"><IconShuffle /></Pill>
             <Pill onClick={() => setRepeat(p => !p)}  active={repeat}  title="Repeat"><IconRepeat /></Pill>
             <div className="w-px h-4 bg-white/10 mx-1" />
-            <Pill onClick={onOpenAmbient}     title="Ambient Sounds"><IconMix /></Pill>
-            <Pill onClick={onOpenSleepTimer}  active={activeTimerSeconds > 0} title={activeTimerSeconds > 0 ? `Timer Active: ${formatTime(activeTimerSeconds)}` : "Focus Timer & Alarm"}>
+            <Pill onClick={onOpenAmbient}     highlight={showIntroFlash} title="Ambient Sounds"><IconMix /></Pill>
+            <Pill onClick={onOpenSleepTimer}  highlight={showIntroFlash} active={activeTimerSeconds > 0} title={activeTimerSeconds > 0 ? `Timer Active: ${formatTime(activeTimerSeconds)}` : "Focus Timer & Alarm"}>
               <span className="flex items-center gap-1">
                 <IconTimer />
                 {activeTimerSeconds > 0 && (
@@ -487,8 +506,8 @@ export default function Player({
           <div className="flex items-center justify-center gap-1 pt-1 border-t border-white/5">
             <Pill onClick={() => setShuffle(p => !p)} active={shuffle} title="Shuffle"><IconShuffle /></Pill>
             <Pill onClick={() => setRepeat(p => !p)}  active={repeat}  title="Repeat"><IconRepeat /></Pill>
-            <Pill onClick={onOpenAmbient}    title="Ambient"><IconMix /></Pill>
-            <Pill onClick={onOpenSleepTimer} active={activeTimerSeconds > 0} title={activeTimerSeconds > 0 ? `Timer: ${formatTime(activeTimerSeconds)}` : "Timer"}>
+            <Pill onClick={onOpenAmbient}    highlight={showIntroFlash} title="Ambient"><IconMix /></Pill>
+            <Pill onClick={onOpenSleepTimer} highlight={showIntroFlash} active={activeTimerSeconds > 0} title={activeTimerSeconds > 0 ? `Timer: ${formatTime(activeTimerSeconds)}` : "Timer"}>
               <span className="flex items-center gap-0.5">
                 <IconTimer />
                 {activeTimerSeconds > 0 && (
