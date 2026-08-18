@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   X,
-  Plus,
   Trash2,
   Play,
   Pause,
@@ -15,6 +14,7 @@ import {
   Sliders,
   Disc,
   FolderOpen,
+  CheckCircle2,
 } from "lucide-react";
 import { PLAYLISTS } from "../lib/tracks";
 import {
@@ -23,6 +23,8 @@ import {
   saveAudioBlob,
   getAudioBlob,
   deleteAudioBlob,
+  setCachedBlobUrl,
+  getCachedBlobUrl,
 } from "../lib/customTracks";
 
 export default function PlaylistModal({
@@ -37,20 +39,29 @@ export default function PlaylistModal({
   const [activeTab, setActiveTab] = useState("custom"); // 'custom' | playlist id
   const [customTracks, setCustomTracks] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Load custom tracks from localStorage / IndexedDB
+  // Load custom tracks from localStorage & IndexedDB
   useEffect(() => {
+    if (!isOpen) return;
+
     const loaded = getCustomTracks();
-    // Hydrate blob URLs for local files
     const hydrateBlobs = async () => {
       const hydrated = await Promise.all(
         loaded.map(async (t) => {
-          if (t.isLocalFile && !t.audioUrl?.startsWith("blob:")) {
+          // Check in-memory cache first
+          const cached = getCachedBlobUrl(t.id);
+          if (cached) return { ...t, audioUrl: cached };
+
+          // Otherwise hydrate from IndexedDB
+          if (t.isLocalFile) {
             const blob = await getAudioBlob(t.id);
             if (blob) {
-              return { ...t, audioUrl: URL.createObjectURL(blob) };
+              const url = URL.createObjectURL(blob);
+              setCachedBlobUrl(t.id, url);
+              return { ...t, audioUrl: url };
             }
           }
           return t;
@@ -75,68 +86,83 @@ export default function PlaylistModal({
     if (e.target === e.currentTarget) onClose();
   };
 
-  // Handle File Upload (Drag & Drop or Picker)
-  const handleFiles = async (files) => {
-    if (!files || !files.length) return;
+  // Robust File Handler for both Drag & Drop and File Picker
+  const handleFiles = async (fileList) => {
+    if (!fileList || fileList.length === 0) return;
     setIsUploading(true);
 
+    const files = Array.from(fileList);
     const newTracks = [];
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith("audio/") && !file.name.match(/\.(mp3|wav|m4a|aac|flac|ogg)$/i)) {
-        continue;
-      }
+
+    for (const file of files) {
+      // Broad check: audio extension or audio MIME type or any video/audio container
+      const name = file.name || "Untitled Audio";
+      const isAudio =
+        file.type.startsWith("audio/") ||
+        file.type.startsWith("video/") ||
+        name.match(/\.(mp3|wav|m4a|aac|flac|ogg|opus|webm|wma|weba|m4b|aiff)$/i);
+
+      if (!isAudio) continue;
 
       const id = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-      const cleanName = file.name.replace(/\.[^/.]+$/, "");
-      const [artistGuess, titleGuess] = cleanName.includes("-")
-        ? cleanName.split("-").map((s) => s.trim())
-        : ["Local File", cleanName];
+      const cleanName = name.replace(/\.[^/.]+$/, "");
+      const parts = cleanName.split(" - ");
+      const artistGuess = parts.length > 1 ? parts[0].trim() : "Personal Audio";
+      const titleGuess = parts.length > 1 ? parts.slice(1).join(" - ").trim() : cleanName;
 
       const blobUrl = URL.createObjectURL(file);
+      setCachedBlobUrl(id, blobUrl);
 
-      // Estimate duration from audio tag
-      let duration = 180;
-      try {
-        const audio = new Audio(blobUrl);
-        await new Promise((res) => {
-          audio.onloadedmetadata = () => {
-            duration = Math.round(audio.duration) || 180;
-            res();
-          };
-          audio.onerror = () => res();
-          setTimeout(res, 1200);
-        });
-      } catch (err) {
-        console.error(err);
-      }
-
-      // Save binary blob to browser IndexedDB
-      await saveAudioBlob(id, file);
+      // Asynchronously store to IndexedDB
+      saveAudioBlob(id, file).catch((err) => console.warn(err));
 
       const trackObj = {
         id,
-        title: titleGuess || cleanName,
+        title: titleGuess || "Custom Track",
         artist: artistGuess || "Personal Audio",
-        duration,
+        duration: 180,
         audioUrl: blobUrl,
         isLocalFile: true,
         mood: "personal",
         addedAt: Date.now(),
       };
 
+      // Non-blocking duration extraction
+      try {
+        const audio = new Audio(blobUrl);
+        audio.onloadedmetadata = () => {
+          if (audio.duration && Number.isFinite(audio.duration)) {
+            trackObj.duration = Math.round(audio.duration);
+            setCustomTracks((prev) =>
+              prev.map((t) => (t.id === id ? { ...t, duration: Math.round(audio.duration) } : t))
+            );
+          }
+        };
+      } catch (_) {}
+
       newTracks.push(trackObj);
     }
 
     if (newTracks.length > 0) {
-      const updated = [...newTracks, ...customTracks];
-      setCustomTracks(updated);
-      saveCustomTracks(
-        updated.map((t) => ({
-          ...t,
-          audioUrl: "indexeddb",
-        }))
-      );
+      setCustomTracks((prev) => {
+        const updated = [...newTracks, ...prev];
+        saveCustomTracks(
+          updated.map((t) => ({
+            ...t,
+            audioUrl: "indexeddb",
+          }))
+        );
+        return updated;
+      });
+
       setActiveTab("custom");
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 3000);
+
+      // Auto-select and play the first uploaded track
+      if (onSelectTrack) {
+        onSelectTrack(newTracks[0]);
+      }
     }
 
     setIsUploading(false);
@@ -146,14 +172,16 @@ export default function PlaylistModal({
   const handleDeleteTrack = async (e, id) => {
     e.stopPropagation();
     await deleteAudioBlob(id);
-    const updated = customTracks.filter((t) => t.id !== id);
-    setCustomTracks(updated);
-    saveCustomTracks(
-      updated.map((t) => ({
-        ...t,
-        audioUrl: "indexeddb",
-      }))
-    );
+    setCustomTracks((prev) => {
+      const updated = prev.filter((t) => t.id !== id);
+      saveCustomTracks(
+        updated.map((t) => ({
+          ...t,
+          audioUrl: "indexeddb",
+        }))
+      );
+      return updated;
+    });
   };
 
   // Current Playlist / Filtered Tracks
@@ -177,6 +205,21 @@ export default function PlaylistModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-2xl animate-fade-in select-none"
       onClick={handleBackdropClick}
     >
+      {/* ── Global Invisible File Input ── */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.opus,.webm,.wma,.m4b,.aiff"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            handleFiles(e.target.files);
+          }
+          e.target.value = "";
+        }}
+      />
+
       {/* Outer Modal Frame with Ambient Purple Glass Glow */}
       <div className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-[2.8rem] border border-purple-500/25 bg-gradient-to-b from-[#13111e]/95 via-[#0e0f16]/95 to-[#0b0b10]/98 p-6 sm:p-9 text-paper shadow-[0_30px_100px_rgba(0,0,0,0.95),inset_0_1px_2px_rgba(216,180,254,0.12)]">
         
@@ -321,40 +364,55 @@ export default function PlaylistModal({
             {/* 2A. Prominent Drag & Drop Upload Zone */}
             {activeTab === "custom" && (
               <div className="rounded-[2.2rem] bg-gradient-to-b from-[#19162a]/95 via-[#13131d]/95 to-[#0e0f17]/95 border border-purple-500/25 p-6 shadow-lg relative overflow-hidden">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => handleFiles(e.target.files)}
-                />
-
+                
                 {/* Big Drag & Drop Area */}
                 <div
                   onDragOver={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     setDragOver(true);
                   }}
-                  onDragLeave={() => setDragOver(false)}
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDragOver(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDragOver(false);
+                  }}
                   onDrop={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     setDragOver(false);
-                    handleFiles(e.dataTransfer.files);
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                      handleFiles(e.dataTransfer.files);
+                    }
                   }}
                   onClick={() => fileInputRef.current?.click()}
                   className={`rounded-2xl border-2 border-dashed p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
                     dragOver
                       ? "border-[#dcf87a] bg-[#dcf87a]/15 scale-[1.01]"
+                      : uploadSuccess
+                      ? "border-emerald-400 bg-emerald-500/10"
                       : "border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10"
                   }`}
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-[#dcf87a] shadow-inner">
-                    <UploadCloud size={24} className={isUploading ? "animate-bounce" : ""} />
+                    {uploadSuccess ? (
+                      <CheckCircle2 size={24} className="text-emerald-400 animate-bounce" />
+                    ) : (
+                      <UploadCloud size={24} className={isUploading ? "animate-bounce" : ""} />
+                    )}
                   </div>
                   <div>
                     <p className="text-sm font-extrabold text-white">
-                      {isUploading ? "Importing your music..." : "Drag & Drop MP3s or Click to Browse"}
+                      {isUploading
+                        ? "Importing your music..."
+                        : uploadSuccess
+                        ? "Song imported & playing!"
+                        : "Drag & Drop MP3s or Click to Browse"}
                     </p>
                     <p className="text-xs text-white/50 mt-1 font-mono">
                       Supports .mp3, .wav, .m4a, .flac, .ogg (Stored securely in browser)

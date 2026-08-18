@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ALL_TRACKS, PLAYLISTS } from "../lib/tracks";
-import { getCustomTracks } from "../lib/customTracks";
+import { getCustomTracks, getAudioBlob, getCachedBlobUrl, setCachedBlobUrl } from "../lib/customTracks";
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -321,8 +321,23 @@ export default function Player({
   /* ── Ref to avoid stale closure in onEnded ─────────── */
   const handleNextRef = useRef(null);
 
+  /* ── Core: resolve audio URL from memory/IndexedDB ── */
+  const resolveAudioUrl = useCallback(async (trackObj) => {
+    if (!trackObj) return null;
+    if (trackObj.audioUrl && trackObj.audioUrl !== "indexeddb") return trackObj.audioUrl;
+    const cached = getCachedBlobUrl(trackObj.id);
+    if (cached) return cached;
+    const blob = await getAudioBlob(trackObj.id);
+    if (blob) {
+      const url = URL.createObjectURL(blob);
+      setCachedBlobUrl(trackObj.id, url);
+      return url;
+    }
+    return trackObj.audioUrl;
+  }, []);
+
   /* ── Core: go to a track index ─────────────────────── */
-  const goToIndex = useCallback((index, autoPlay = true) => {
+  const goToIndex = useCallback(async (index, autoPlay = true) => {
     let next = index;
     if (shuffleRef.current && trackList.length > 1) {
       next = Math.floor(Math.random() * trackList.length);
@@ -330,19 +345,24 @@ export default function Player({
       next = (index + trackList.length) % trackList.length;
     }
     const nextTrack = trackList[next];
+    if (!nextTrack) return;
     setCurrentTrackId(nextTrack.id);
     setLoadError(null);
 
     const audio = audioRef.current;
     if (!audio) return;
 
-    // Changing audio.src implicitly calls load() and fires canplay when ready.
-    // We set a flag so the canplay handler knows to call play().
+    const resolvedUrl = await resolveAudioUrl(nextTrack);
+    if (!resolvedUrl || resolvedUrl === "indexeddb") {
+      setLoadError("File missing or unreadable");
+      return;
+    }
+
     if (autoPlay) playOnLoadRef.current = true;
-    audio.src    = nextTrack.audioUrl;
+    audio.src    = resolvedUrl;
     audio.volume = volumeRef.current / 100;
     audio.muted  = false;
-  }, [trackList, setCurrentTrackId]);
+  }, [trackList, setCurrentTrackId, resolveAudioUrl]);
 
   const handleNext = useCallback((e) => { e?.stopPropagation(); goToIndex(trackIndex + 1, true);  }, [goToIndex, trackIndex]);
   const handlePrev = useCallback((e) => { e?.stopPropagation(); goToIndex(trackIndex - 1, true);  }, [goToIndex, trackIndex]);
@@ -393,16 +413,21 @@ export default function Player({
     }
   }, []);
 
-  const playCustomTrack = useCallback((trackObj) => {
+  const playCustomTrack = useCallback(async (trackObj) => {
+    if (!trackObj) return;
     setCurrentTrackId(trackObj.id);
     setLoadError(null);
     const audio = audioRef.current;
     if (!audio) return;
+
+    const resolvedUrl = await resolveAudioUrl(trackObj);
+    if (!resolvedUrl || resolvedUrl === "indexeddb") return;
+
     playOnLoadRef.current = true;
-    audio.src = trackObj.audioUrl;
+    audio.src = resolvedUrl;
     audio.volume = volumeRef.current / 100;
     audio.muted = false;
-  }, [setCurrentTrackId]);
+  }, [setCurrentTrackId, resolveAudioUrl]);
 
   /* ── Register hotkey handlers ──────────────────────── */
   useEffect(() => {
