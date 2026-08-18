@@ -74,13 +74,13 @@ class AlarmSoundSynthesizer {
 
 export const synthAlarm = new AlarmSoundSynthesizer();
 
-// Available alarm options combining synthesized chimes and full Backbench songs
+// Available alarm options combining synthesized chimes and full Backbench songs (clean pure text)
 export const ALARM_SOUND_OPTIONS = [
-  { id: "chime-bowl", name: "🔔 Zen Singing Bowl (432Hz)", type: "synth", isChime: true },
-  { id: "chime-bell", name: "✨ Lo-Fi Bell Chime", type: "synth", isChime: true },
+  { id: "chime-bowl", name: "Zen Singing Bowl (432Hz)", type: "synth", isChime: true },
+  { id: "chime-bell", name: "Lo-Fi Rhodes Bell Chime", type: "synth", isChime: true },
   ...ALL_TRACKS.map((t) => ({
     id: `track-${t.id}`,
-    name: `🎵 ${t.title} — ${t.artist}`,
+    name: `${t.title} — ${t.artist}`,
     trackId: t.id,
     audioUrl: t.audioUrl,
     type: "song",

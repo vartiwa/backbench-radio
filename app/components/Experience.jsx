@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { Bell } from "lucide-react";
 import Clock from "./Clock";
 import Player from "./Player";
 import ThemeToggle from "./ThemeToggle";
@@ -516,18 +517,18 @@ export default function Experience() {
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-ink text-xl font-bold animate-pulse shadow-[0_0_15px_#f59e0b]">
-                ⏰
+                <Bell size={18} className="text-black" />
               </span>
               <div className="min-w-0">
                 <h4 className="text-xs uppercase tracking-wider text-amber-300 font-bold truncate">
                   {ringingAlarm.mode === "focus"
-                    ? "🍅 FOCUS SESSION COMPLETE!"
+                    ? "FOCUS SESSION COMPLETE"
                     : ringingAlarm.mode === "break"
-                    ? "☕ BREAK TIME OVER!"
-                    : "⏰ ALARM TIME EXPIRED!"}
+                    ? "BREAK TIME FINISHED"
+                    : "ALARM TIME REACHED"}
                 </h4>
                 <p className="text-[10px] text-paper/60 truncate mt-0.5">
-                  Alarm chime is actively playing
+                  Alarm audio is actively playing
                 </p>
               </div>
             </div>
