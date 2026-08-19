@@ -122,10 +122,77 @@ export default function ListeningStatsModal({
     };
   }, [stats]);
 
-  if (!isOpen || !stats) return null;
-
   // Max seconds for 7-day bar chart scaling
-  const maxBarSeconds = Math.max(...history.map((h) => h.seconds), 1800);
+  const maxBarSeconds = useMemo(() => {
+    return Math.max(...(history?.map((h) => h.seconds) || []), 1800);
+  }, [history]);
+
+  // Real-time acoustic rhythm metrics (Day/Night balance, 7-day spline wave, peak focus day)
+  const rhythmMetrics = useMemo(() => {
+    if (!stats) {
+      return {
+        dayPct: 50,
+        nightPct: 50,
+        peakDayIndex: 6,
+        peakDayName: "TODAY",
+        peakPoint: { x: 260, y: 35 },
+        wavePath: "M 0 45 Q 150 20, 300 35",
+      };
+    }
+
+    const themes = stats.themes || {};
+    const campusSec = Math.max(0, themes.campus || 0);
+    const nightSec =
+      Math.max(0, themes.street || 0) +
+      Math.max(0, themes.hiphop || 0) +
+      Math.max(0, themes.sanctuary || 0);
+    const totalSec = campusSec + nightSec;
+
+    const dayPct = totalSec > 0 ? Math.round((campusSec / totalSec) * 100) : 50;
+    const nightPct = totalSec > 0 ? 100 - dayPct : 50;
+
+    // Find peak focus day index from history (0 to 6)
+    let peakIndex = 0;
+    let maxSec = -1;
+    const safeHistory = history || [];
+    safeHistory.forEach((h, idx) => {
+      if (h.seconds > maxSec) {
+        maxSec = h.seconds;
+        peakIndex = idx;
+      }
+    });
+
+    // Map 7 days to dynamic SVG curve coordinates (viewBox 0 0 300 60)
+    const points = safeHistory.map((h, i) => {
+      const x = (i / Math.max(1, safeHistory.length - 1)) * 280 + 10;
+      const norm = maxBarSeconds > 0 ? Math.min(1, h.seconds / maxBarSeconds) : 0;
+      const y = 48 - norm * 34; // between 48 (zero) and 14 (peak)
+      return { x, y };
+    });
+
+    // Build smooth cubic bezier spline curve through points
+    let pathD = points.length > 0 ? `M ${points[0].x} ${points[0].y}` : "M 0 45 L 300 45";
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i];
+      const p1 = points[i + 1];
+      const cpX1 = p0.x + (p1.x - p0.x) * 0.5;
+      const cpX2 = p0.x + (p1.x - p0.x) * 0.5;
+      pathD += ` C ${cpX1} ${p0.y}, ${cpX2} ${p1.y}, ${p1.x} ${p1.y}`;
+    }
+
+    const peakPoint = points[peakIndex] || { x: 260, y: 25 };
+
+    return {
+      dayPct,
+      nightPct,
+      peakDayIndex: peakIndex,
+      peakDayName: safeHistory[peakIndex]?.dayName || "TODAY",
+      peakPoint,
+      wavePath: pathD,
+    };
+  }, [stats, history, maxBarSeconds]);
+
+  if (!isOpen || !stats) return null;
 
   // Daily target completion (60 min goal)
   const targetPct = Math.min(100, Math.round((todaySeconds / (60 * 60)) * 100));
@@ -489,13 +556,13 @@ export default function ListeningStatsModal({
                 <div>
                   <h4 className="text-base font-extrabold text-black">Acoustic Focus Rhythm</h4>
                   <div className="flex items-center gap-3 text-xs font-semibold text-black/70 mt-1">
-                    <span className="flex items-center gap-1">
-                      <span className="h-2 w-2 rounded-full bg-black" />
-                      Campus (54%)
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-amber-600 shadow-sm" />
+                      <span>Campus Study ({rhythmMetrics.dayPct}%)</span>
                     </span>
-                    <span className="flex items-center gap-1">
-                      <span className="h-2 w-2 rounded-full bg-purple-600" />
-                      Night Flow (46%)
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-purple-700 shadow-sm" />
+                      <span>Night Flow ({rhythmMetrics.nightPct}%)</span>
                     </span>
                   </div>
                 </div>
@@ -523,51 +590,72 @@ export default function ListeningStatsModal({
                 </div>
               </div>
 
-              {/* Big Stat and Smooth Trend Wave Curve */}
+              {/* Big Stat and Smooth Dynamic Trend Wave Curve */}
               <div className="mt-4 flex flex-col sm:flex-row items-baseline sm:items-center justify-between gap-4">
-                <div className="text-6xl sm:text-7xl font-extrabold text-black leading-none">
-                  {stats.currentStreak || 1}<span className="text-3xl font-bold">d</span>
+                <div className="flex flex-col">
+                  <div className="text-6xl sm:text-7xl font-extrabold text-black leading-none tracking-tight">
+                    {timeframe === "weekly"
+                      ? `${stats.currentStreak || 1}d`
+                      : `${Math.max(1, Math.round(stats.totalSeconds / 3600))}h`}
+                  </div>
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-black/60 mt-1">
+                    {timeframe === "weekly" ? "Consecutive Streak" : "Total Time Logged"}
+                  </span>
                 </div>
 
-                {/* Smooth Vector Wave Curve */}
+                {/* Smooth Real-Time Vector Wave Curve */}
                 <div className="flex-1 w-full relative">
-                  {/* Floating Tooltip Chip */}
-                  <div className="absolute top-0 right-1/3 bg-black text-[#dcf87a] rounded-md px-2.5 py-0.5 text-[9px] font-extrabold shadow-md">
-                    PEAK FOCUS RHYTHM
+                  {/* Dynamic Floating Tooltip Chip for Peak Day */}
+                  <div
+                    className="absolute -top-3 bg-black text-[#dcf87a] rounded-md px-2.5 py-0.5 text-[9px] font-extrabold shadow-md transform -translate-x-1/2 transition-all duration-300"
+                    style={{ left: `${(rhythmMetrics.peakPoint.x / 300) * 100}%` }}
+                  >
+                    PEAK: {rhythmMetrics.peakDayName}
                   </div>
 
                   <svg className="w-full h-16" viewBox="0 0 300 60" fill="none">
-                    {/* Dotted Lower Purple Curve */}
+                    {/* Dotted Baseline Reference Curve */}
                     <path
-                      d="M0 45 C 50 48, 100 35, 150 42 C 200 48, 250 30, 300 40"
+                      d="M 0 46 Q 75 48, 150 44 T 300 46"
                       stroke="#818cf8"
-                      strokeWidth="2.5"
+                      strokeWidth="2"
                       strokeDasharray="4 4"
                       fill="transparent"
+                      opacity="0.6"
                     />
 
-                    {/* Solid Green Main Curve */}
+                    {/* Real-Time Mathematical Dynamic Spline Curve */}
                     <path
-                      d="M0 40 C 40 42, 70 20, 110 32 C 150 45, 180 15, 230 18 C 270 20, 290 8, 300 5"
+                      d={rhythmMetrics.wavePath}
                       stroke="#0f1117"
-                      strokeWidth="3"
+                      strokeWidth="3.5"
                       strokeLinecap="round"
+                      strokeLinejoin="round"
                       fill="transparent"
                     />
 
-                    {/* Peak Point Dot */}
-                    <circle cx="180" cy="15" r="4.5" fill="#818cf8" stroke="#ffffff" strokeWidth="2" />
+                    {/* Peak Focus Point Glow Marker */}
+                    <circle
+                      cx={rhythmMetrics.peakPoint.x}
+                      cy={rhythmMetrics.peakPoint.y}
+                      r="5"
+                      fill="#818cf8"
+                      stroke="#0f1117"
+                      strokeWidth="2.5"
+                      className="animate-pulse"
+                    />
                   </svg>
 
-                  {/* X-Axis Month / Day Labels */}
-                  <div className="flex items-center justify-between text-[9px] font-extrabold text-black/60 uppercase px-1">
-                    <span>MON</span>
-                    <span>TUE</span>
-                    <span>WED</span>
-                    <span>THU</span>
-                    <span>FRI</span>
-                    <span>SAT</span>
-                    <span>SUN</span>
+                  {/* Dynamic X-Axis 7-Day Labels from History */}
+                  <div className="flex items-center justify-between text-[9px] font-extrabold text-black/70 uppercase px-1">
+                    {history.map((h) => (
+                      <span
+                        key={h.dateKey}
+                        className={h.isToday ? "text-black underline font-black" : "text-black/60"}
+                      >
+                        {h.dayName}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>
