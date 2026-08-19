@@ -205,31 +205,95 @@ export default function Experience() {
     }
   }, []);
 
-  // 2.5D Interactive Mouse Parallax for background artwork
+  // 2.5D Interactive Mouse/Head Tilt, Living Breathing Physics & Mobile Gyroscope
+  const [sceneTransform, setSceneTransform] = useState({
+    rotX: 0,
+    rotY: 0,
+    rotZ: 0,
+    transX: 0,
+    transY: 0,
+    scale: 1.04,
+  });
+
   useEffect(() => {
     let frame;
-    let targetX = 0;
-    let targetY = 0;
-    let curX = 0;
-    let curY = 0;
+    let targetRotX = 0;
+    let targetRotY = 0;
+    let targetRotZ = 0;
+    let targetTransX = 0;
+    let targetTransY = 0;
 
+    let curRotX = 0;
+    let curRotY = 0;
+    let curRotZ = 0;
+    let curTransX = 0;
+    let curTransY = 0;
+
+    // Desktop Mouse Position Tracking
     const handleMouseMove = (e) => {
-      targetX = (e.clientX / window.innerWidth - 0.5) * -14;
-      targetY = (e.clientY / window.innerHeight - 0.5) * -10;
+      const normX = e.clientX / window.innerWidth - 0.5; // -0.5 to +0.5
+      const normY = e.clientY / window.innerHeight - 0.5; // -0.5 to +0.5
+
+      targetRotX = normY * -5.5; // Natural character head / perspective look up/down
+      targetRotY = normX * 6.5; // Character head turn towards mouse left/right
+      targetRotZ = normX * 0.9; // Subtle organic head tilt angle
+      targetTransX = normX * -18; // Parallax lateral shift
+      targetTransY = normY * -14; // Parallax vertical shift
     };
 
-    const loop = () => {
-      curX += (targetX - curX) * 0.04;
-      curY += (targetY - curY) * 0.04;
-      setParallax({ x: curX, y: curY });
-      frame = requestAnimationFrame(loop);
+    // Mobile Gyroscope Tilt Tracking (Physical Phone Movement)
+    const handleOrientation = (e) => {
+      if (e.gamma !== null && e.beta !== null) {
+        const gammaClamped = Math.max(-45, Math.min(45, e.gamma)); // Left/Right tilt
+        const betaClamped = Math.max(-45, Math.min(45, e.beta - 45)); // Front/Back tilt
+        const normGamma = gammaClamped / 45;
+        const normBeta = betaClamped / 45;
+
+        targetRotX = normBeta * -6;
+        targetRotY = normGamma * 7;
+        targetRotZ = normGamma * 1.2;
+        targetTransX = normGamma * -16;
+        targetTransY = normBeta * -12;
+      }
     };
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    if (typeof window !== "undefined" && window.DeviceOrientationEvent) {
+      window.addEventListener("deviceorientation", handleOrientation, { passive: true });
+    }
+
+    const loop = (timestamp) => {
+      // Smooth LERP (Linear Interpolation) damping for velvety organic motion
+      curRotX += (targetRotX - curRotX) * 0.045;
+      curRotY += (targetRotY - curRotY) * 0.045;
+      curRotZ += (targetRotZ - curRotZ) * 0.045;
+      curTransX += (targetTransX - curTransX) * 0.045;
+      curTransY += (targetTransY - curTransY) * 0.045;
+
+      // 4-Second Idle Breathing Cycle (Gently moves chest & scene up/down)
+      const time = timestamp || performance.now();
+      const breathY = Math.sin(time * 0.0016) * 2.2;
+      const breathScale = 1.04 + Math.sin(time * 0.0012) * 0.004;
+
+      setSceneTransform({
+        rotX: curRotX,
+        rotY: curRotY,
+        rotZ: curRotZ,
+        transX: curTransX,
+        transY: curTransY + breathY,
+        scale: breathScale,
+      });
+
+      frame = requestAnimationFrame(loop);
+    };
+
     frame = requestAnimationFrame(loop);
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
+      if (typeof window !== "undefined" && window.DeviceOrientationEvent) {
+        window.removeEventListener("deviceorientation", handleOrientation);
+      }
       cancelAnimationFrame(frame);
     };
   }, []);
@@ -309,7 +373,9 @@ export default function Experience() {
 
   const active = THEMES[theme] || THEMES[DEFAULT_THEME];
   const currentMoodIndex = MOOD_KEYS.indexOf(theme);
-  const bgTransform = `translate3d(${parallax.x}px, ${parallax.y}px, 0)`;
+  const beatPulse = isPlaying && theme === "hiphop" ? 0.006 : 0;
+  const totalScale = sceneTransform.scale + beatPulse;
+  const bgTransform = `perspective(1200px) rotateX(${sceneTransform.rotX.toFixed(2)}deg) rotateY(${sceneTransform.rotY.toFixed(2)}deg) rotateZ(${sceneTransform.rotZ.toFixed(2)}deg) translate3d(${sceneTransform.transX.toFixed(2)}px, ${sceneTransform.transY.toFixed(2)}px, 0) scale3d(${totalScale.toFixed(3)}, ${totalScale.toFixed(3)}, 1)`;
 
   return (
     <main
@@ -341,17 +407,18 @@ export default function Experience() {
       {/* Dynamic Interactive Atmosphere Particle Canvas */}
       <AtmosphereCanvas theme={theme} isPlaying={isPlaying} isExhausted={isExhausted} />
 
-      {/* Background images with full-screen slide transitions & cinematic zoom breathing */}
+      {/* Background images with full-screen slide transitions, 2.5D tilt & living wind sway */}
       <div
-        className={`fixed -inset-8 pointer-events-none z-0 will-change-transform ${
+        className={`fixed -inset-10 pointer-events-none z-0 will-change-transform ${
           isPlaying ? "music-playing-flow" : ""
         }`}
         style={{
           transform: bgTransform,
+          transformOrigin: "center center",
         }}
       >
         <div
-          className={`hero-bg hero-bg-campus pointer-events-none z-0 ${
+          className={`hero-bg hero-bg-campus living-wind-sway pointer-events-none z-0 ${
             theme === "campus" && !isExhausted ? (slideDirection === "down" ? "mood-slide-down" : "mood-slide-up") : ""
           }`}
           style={{
@@ -359,7 +426,7 @@ export default function Experience() {
           }}
         />
         <div
-          className={`hero-bg hero-bg-exhausted pointer-events-none z-0 ${
+          className={`hero-bg hero-bg-exhausted living-wind-sway pointer-events-none z-0 ${
             theme === "campus" && isExhausted ? (slideDirection === "down" ? "mood-slide-down" : "mood-slide-up") : ""
           }`}
           style={{
@@ -367,7 +434,7 @@ export default function Experience() {
           }}
         />
         <div
-          className={`hero-bg hero-bg-street tree-sway-ghibli pointer-events-none z-0 ${
+          className={`hero-bg hero-bg-street living-wind-sway pointer-events-none z-0 ${
             theme === "street" ? (slideDirection === "down" ? "mood-slide-down" : "mood-slide-up") : ""
           }`}
           style={{
@@ -375,7 +442,7 @@ export default function Experience() {
           }}
         />
         <div
-          className={`hero-bg hero-bg-hiphop pointer-events-none z-0 ${
+          className={`hero-bg hero-bg-hiphop living-wind-sway pointer-events-none z-0 ${
             theme === "hiphop" ? (slideDirection === "down" ? "mood-slide-down" : "mood-slide-up") : ""
           }`}
           style={{

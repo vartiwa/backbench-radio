@@ -73,19 +73,32 @@ body {
 }
 
 /* Ghibli living wind & tree canopy sway */
-.tree-sway-ghibli {
-  animation: tree-wind-sway 10s ease-in-out infinite alternate;
+.living-wind-sway {
+  animation: living-wind-sway 12s ease-in-out infinite;
+  transform-origin: bottom center;
+  will-change: transform, filter;
 }
 
-@keyframes tree-wind-sway {
+@keyframes living-wind-sway {
   0% {
-    filter: brightness(1) saturate(1.05);
+    transform: rotate(0deg) skewX(0deg) scale(1.04);
+    filter: brightness(1) saturate(1.02);
+  }
+  25% {
+    transform: rotate(0.4deg) skewX(0.3deg) scale(1.045);
+    filter: brightness(1.03) saturate(1.05);
   }
   50% {
-    filter: brightness(1.08) saturate(1.15);
+    transform: rotate(-0.35deg) skewX(-0.25deg) scale(1.04);
+    filter: brightness(0.98) saturate(1);
+  }
+  75% {
+    transform: rotate(0.45deg) skewX(0.35deg) scale(1.048);
+    filter: brightness(1.04) saturate(1.06);
   }
   100% {
-    filter: brightness(1.03) saturate(1.1);
+    transform: rotate(0deg) skewX(0deg) scale(1.04);
+    filter: brightness(1) saturate(1.02);
   }
 }
 
