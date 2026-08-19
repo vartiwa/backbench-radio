@@ -6,19 +6,9 @@ import { Radio } from "lucide-react";
 
 const GLITCH_CHARS = "░▒▓█#$%&!?01X*+⚔†";
 
-// 28 Dynamic Audio Spectrum Frequency Bars (Inspired by Swishy Audio Visualizer)
-const BAR_COUNT = 28;
-const BARS_CONFIG = Array.from({ length: BAR_COUNT }, (_, i) => ({
-  frequency: 0.08 + (i % 7) * 0.025,
-  phase: i * 0.28,
-  amplitude: 0.35 + Math.sin(i * 0.22) * 0.25,
-}));
-
 export default function KineticTitle({ title, tagline, theme, isPlaying, isExhausted }) {
   const containerRef = useRef(null);
   const taglineRef = useRef(null);
-  const waveAnimRef = useRef(null);
-  const barsCanvasRef = useRef(null);
   const [displayText, setDisplayText] = useState(title);
   const [isGlitchingText, setIsGlitchingText] = useState(false);
 
@@ -37,12 +27,12 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
 
   const themeHue = isEx ? 172 : isHiphop ? 275 : isStreet ? 200 : 38;
   const themeGlow = isEx
-    ? "rgba(45, 212, 191, 0.45)"
+    ? "rgba(45, 212, 191, 0.55)"
     : isHiphop
-    ? "rgba(168, 85, 247, 0.55)"
+    ? "rgba(168, 85, 247, 0.65)"
     : isStreet
-    ? "rgba(56, 189, 248, 0.45)"
-    : "rgba(245, 158, 11, 0.45)";
+    ? "rgba(56, 189, 248, 0.55)"
+    : "rgba(245, 158, 11, 0.55)";
 
   const titleClass = "font-display italic tracking-tight font-normal";
   const sizeClass = "text-[2.25rem] min-[390px]:text-[2.75rem] sm:text-8xl lg:text-9xl leading-none";
@@ -137,105 +127,60 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
     }
   }, [theme, isHiphop, isEx]);
 
-  // Audio-reactive Smooth Acoustic Float when Playing
+  // 60FPS Slow, Serene & Calm Liquid Harmonic Traveling Soundwave Flow
   useEffect(() => {
     if (!containerRef.current) return;
     const chars = containerRef.current.querySelectorAll(".char-span");
-
-    if (isPlaying && chars.length > 0) {
-      waveAnimRef.current = animate(chars, {
-        translateY: [-4, 4],
-        delay: stagger(55, { from: "center" }),
-        duration: 1300,
-        alternate: true,
-        loop: true,
-        ease: "inOutSine",
-      });
-    } else {
-      if (waveAnimRef.current) {
-        waveAnimRef.current.pause();
-      }
-      animate(chars, {
-        translateY: 0,
-        scale: 1,
-        duration: 300,
-        ease: "outQuad",
-      });
-    }
-
-    return () => {
-      if (waveAnimRef.current) waveAnimRef.current.pause();
-    };
-  }, [isPlaying]);
-
-  // 60FPS Swishy Audio Visualizer Canvas Spectrum Bars
-  useEffect(() => {
-    const canvas = barsCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!chars.length) return;
 
     let frame = 0;
     let animId;
 
-    const renderBars = () => {
-      frame++;
-      const width = canvas.width;
-      const height = canvas.height;
-      ctx.clearRect(0, 0, width, height);
+    const renderLiquidFlow = () => {
+      frame += 0.016; // Super slow, dreamy, calm pace
 
-      const totalBars = BAR_COUNT;
-      const gap = 4;
-      const barW = (width - (totalBars - 1) * gap) / totalBars;
-      const maxHeight = height * 0.85;
+      chars.forEach((span, i) => {
+        if (span.dataset.isSpace === "true") return;
 
-      for (let i = 0; i < totalBars; i++) {
-        const config = BARS_CONFIG[i];
-        const wave = isPlaying
-          ? Math.sin(frame * config.frequency + config.phase) * config.amplitude + 0.55
-          : 0.12 + Math.sin(frame * 0.02 + config.phase) * 0.05;
+        if (isPlaying) {
+          // Slow, tranquil dual harmonic wave
+          const wave1 = Math.sin(frame * 1.1 - i * 0.26);
+          const wave2 = Math.sin(frame * 0.55 - i * 0.13) * 0.35;
+          const combinedWave = wave1 + wave2; // smooth serene undulating wave
 
-        const currentBarH = Math.max(3, maxHeight * wave);
-        const x = i * (barW + gap);
-        const y = height - currentBarH;
+          const waveCos = Math.cos(frame * 1.1 - i * 0.26);
+          const jumpY = combinedWave * -4.5; // gentle, relaxing vertical drift
+          const rotZ = waveCos * 1.2; // soft subtle tilt
+          const scaleY = 1 + combinedWave * 0.045; // soft breathing stretch
+          const scaleX = 1 - combinedWave * 0.018;
 
-        // Dynamic Swishy HSL Hue Gradient Glow
-        const hueShift = themeHue + (isPlaying ? Math.sin(frame * 0.04 + i * 0.1) * 15 : 0);
-        const lightness = isPlaying ? 65 : 45;
+          // Soft, gentle ambient glow pulse
+          const shimmer = Math.pow(Math.max(0, Math.cos(frame * 0.9 - i * 0.22)), 3);
+          const glowRadius = 10 + shimmer * 14;
+          const brightness = 1 + shimmer * 0.18;
 
-        ctx.fillStyle = `hsl(${hueShift}, 85%, ${lightness}%)`;
-        ctx.shadowColor = `hsla(${hueShift}, 90%, 50%, ${isPlaying ? 0.75 : 0.3})`;
-        ctx.shadowBlur = isPlaying ? 8 : 2;
+          span.style.transform = `translate3d(0, ${jumpY.toFixed(2)}px, 0) rotateZ(${rotZ.toFixed(2)}deg) scale3d(${scaleX.toFixed(3)}, ${scaleY.toFixed(3)}, 1)`;
+          span.style.filter = `drop-shadow(0 0 ${glowRadius.toFixed(1)}px ${themeGlow}) brightness(${brightness.toFixed(2)})`;
+        } else {
+          // Serene resting state
+          span.style.transform = "translate3d(0, 0, 0) rotateZ(0deg) scale3d(1, 1, 1)";
+          span.style.filter = "none";
+        }
+      });
 
-        // Rounded pill bar
-        ctx.beginPath();
-        const r = barW * 0.4;
-        ctx.roundRect(x, y, barW, currentBarH, [r, r, 0, 0]);
-        ctx.fill();
-      }
-
-      animId = requestAnimationFrame(renderBars);
+      animId = requestAnimationFrame(renderLiquidFlow);
     };
 
-    animId = requestAnimationFrame(renderBars);
+    animId = requestAnimationFrame(renderLiquidFlow);
 
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [isPlaying, themeHue]);
+  }, [isPlaying, displayText, themeGlow]);
 
   return (
     <div className="flex flex-col items-center text-center px-6 z-10 my-auto select-none transition-all duration-500">
-      
-      {/* ── 1. SWISHY TOP STATUS PILL: NOW PLAYING ── */}
-      <div className="mb-2 flex items-center gap-2 font-mono text-[9px] sm:text-[11px] font-extrabold uppercase tracking-[0.28em] text-white/70 bg-black/40 border border-white/15 px-3 py-1 rounded-full backdrop-blur-xl shadow-lg animate-fade-in">
-        <Radio size={11} className={isPlaying ? "text-amber-300 animate-pulse" : "text-white/40"} />
-        <span style={{ color: taglineColor }}>{isPlaying ? "NOW PLAYING" : "LIVE RADIO"}</span>
-        <span className="text-white/20">•</span>
-        <span className="text-white/60 tracking-widest">{moodLabel}</span>
-      </div>
-
-      {/* ── 2. MAIN TITLE WITH SWISHY RADIAL AURA BLOOM ── */}
+      {/* ── MAIN TEXT WITH DIRECT AUDIO VISUALIZER SPECTRUM ANIMATION ── */}
       <div className="gemini-aura-container relative select-none">
         
         {/* Dynamic Swishy Radial Glow Ellipse */}
@@ -249,55 +194,50 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
 
         <h1
           ref={containerRef}
-          className={`${titleClass} ${sizeClass} inline-flex flex-wrap justify-center overflow-hidden py-2 relative z-10`}
+          className={`${titleClass} ${sizeClass} inline-flex flex-wrap justify-center overflow-hidden py-3 relative z-10`}
           style={{
             filter: isEx
-              ? "drop-shadow(0 6px 22px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 16px rgba(45,212,191,0.5))"
+              ? "drop-shadow(0 6px 22px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9))"
               : isHiphop
-              ? "drop-shadow(0 6px 22px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 20px rgba(168,85,247,0.6))"
+              ? "drop-shadow(0 6px 22px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9))"
               : isStreet
-              ? "drop-shadow(0 6px 22px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 16px rgba(56,189,248,0.5))"
-              : "drop-shadow(0 6px 22px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 16px rgba(245,158,11,0.45))",
+              ? "drop-shadow(0 6px 22px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9))"
+              : "drop-shadow(0 6px 22px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9))",
             backfaceVisibility: "hidden",
             WebkitFontSmoothing: "antialiased",
           }}
         >
-          {displayText.split("").map((char, index) => (
-            <span
-              key={`${theme}-${isEx}-${char}-${index}`}
-              className="char-span inline-block will-change-transform transform-gpu"
-              style={{
-                display: char === " " ? "inline" : "inline-block",
-                width: char === " " ? "0.25em" : "auto",
-                backgroundImage: gradient,
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                color: "#ffffff",
-                backfaceVisibility: "hidden",
-                WebkitFontSmoothing: "antialiased",
-              }}
-            >
-              {char === " " ? "\u00A0" : char}
-            </span>
-          ))}
+          {displayText.split("").map((char, index) => {
+            const isSpace = char === " ";
+            return (
+              <span
+                key={`${theme}-${isEx}-${char}-${index}`}
+                data-is-space={isSpace ? "true" : "false"}
+                className="char-span inline-block will-change-transform transform-gpu"
+                style={{
+                  display: isSpace ? "inline" : "inline-block",
+                  width: isSpace ? "0.25em" : "auto",
+                  backgroundImage: gradient,
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  color: "#ffffff",
+                  backfaceVisibility: "hidden",
+                  WebkitFontSmoothing: "antialiased",
+                  transformOrigin: "bottom center",
+                }}
+              >
+                {isSpace ? "\u00A0" : char}
+              </span>
+            );
+          })}
         </h1>
       </div>
 
-      {/* ── 3. SWISHY AUDIO VISUALIZER FREQUENCY BARS ── */}
-      <div className="mt-3 flex flex-col items-center">
-        <canvas
-          ref={barsCanvasRef}
-          width={280}
-          height={26}
-          className="h-[22px] w-[240px] sm:w-[280px] drop-shadow-[0_0_12px_rgba(255,255,255,0.2)]"
-        />
-      </div>
-
-      {/* ── 4. CINEMATIC MOOD-MATCHED TAGLINE ── */}
+      {/* ── 3. CINEMATIC MOOD-MATCHED TAGLINE ── */}
       <p
         ref={taglineRef}
-        className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.22em] sm:tracking-[0.32em] font-normal mt-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] text-center px-3"
+        className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.22em] sm:tracking-[0.32em] font-normal mt-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] text-center px-3"
         style={{ color: taglineColor }}
       >
         {tagline}

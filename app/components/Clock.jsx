@@ -93,6 +93,26 @@ export default function Clock({
     else if (onClick) onClick();
   };
 
+  const listeningGlowStyle = isPlaying
+    ? isExhausted
+      ? "bg-teal-500/15 border-teal-400/50 text-teal-100 shadow-[0_0_12px_rgba(45,212,191,0.45)]"
+      : theme === "hiphop"
+      ? "bg-purple-500/15 border-purple-400/50 text-purple-100 shadow-[0_0_12px_rgba(168,85,247,0.45)]"
+      : theme === "street"
+      ? "bg-sky-500/15 border-sky-400/50 text-sky-100 shadow-[0_0_12px_rgba(56,189,248,0.45)]"
+      : "bg-amber-400/15 border-amber-400/50 text-amber-100 shadow-[0_0_12px_rgba(245,158,11,0.45)]"
+    : "bg-white/10 hover:bg-white/20 border-white/10 text-white";
+
+  const headphoneIconColor = isPlaying
+    ? isExhausted
+      ? "text-teal-300 animate-pulse"
+      : theme === "hiphop"
+      ? "text-purple-300 animate-pulse"
+      : theme === "street"
+      ? "text-sky-300 animate-pulse"
+      : "text-amber-300 animate-pulse"
+    : "text-white/70";
+
   return (
     <div
       className="group relative flex items-center gap-3 rounded-[1.8rem] border border-white/15 bg-black/50 p-2 sm:px-3 sm:py-2 backdrop-blur-2xl transition-all duration-300 hover:border-white/30 hover:bg-black/70 hover:shadow-[0_10px_30px_rgba(0,0,0,0.6)] select-none"
@@ -177,15 +197,15 @@ export default function Clock({
           <span>Alarm</span>
         </button>
 
-        {/* Below: Prominent Listening Time Badge */}
+        {/* Below: Prominent Listening Time Badge with Subtle Mood Glow when Playing */}
         <button
           type="button"
           onClick={handleStatsClick}
           title="Personal Listening Telemetry & Journal"
           aria-label="Personal Listening Stats"
-          className="flex items-center gap-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 px-2 py-0.5 text-[11px] font-mono font-extrabold text-white transition-all cursor-pointer shadow-sm active:scale-95"
+          className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-mono font-extrabold transition-all cursor-pointer active:scale-95 ${listeningGlowStyle}`}
         >
-          <Headphones size={11} className="text-white/70" />
+          <Headphones size={11} className={headphoneIconColor} />
           <span className="tabular-nums">{formatListeningDuration(todaySeconds)}</span>
         </button>
       </div>
