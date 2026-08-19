@@ -153,25 +153,13 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
           ref={containerRef}
           className={`${titleClass} ${sizeClass} inline-flex flex-wrap justify-center overflow-hidden py-2 relative z-10`}
           style={{
-            backgroundImage: gradient,
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            color: "transparent",
-            WebkitTextStroke: isEx
-              ? "1px rgba(94, 234, 212, 0.45)"
-              : isHiphop
-              ? "1px rgba(192, 132, 252, 0.45)"
-              : isStreet
-              ? "1px rgba(125, 211, 252, 0.45)"
-              : "1px rgba(254, 215, 170, 0.45)",
             filter: isEx
-              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 2px 6px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(45,212,191,0.35))"
+              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 14px rgba(45,212,191,0.45))"
               : isHiphop
-              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 2px 6px rgba(0,0,0,0.85)) drop-shadow(0 0 16px rgba(168,85,247,0.45))"
+              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 18px rgba(168,85,247,0.55))"
               : isStreet
-              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 2px 6px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(56,189,248,0.35))"
-              : "drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 2px 6px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(245,158,11,0.3))",
+              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 14px rgba(56,189,248,0.45))"
+              : "drop-shadow(0 6px 20px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 14px rgba(245,158,11,0.4))",
             backfaceVisibility: "hidden",
             WebkitFontSmoothing: "antialiased",
           }}
@@ -183,7 +171,13 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
               style={{
                 display: char === " " ? "inline" : "inline-block",
                 width: char === " " ? "0.25em" : "auto",
+                backgroundImage: gradient,
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                color: "#ffffff",
                 backfaceVisibility: "hidden",
+                WebkitFontSmoothing: "antialiased",
               }}
             >
               {char === " " ? "\u00A0" : char}
