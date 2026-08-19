@@ -2,21 +2,31 @@
 
 import { useEffect, useState, useRef } from "react";
 import { animate, stagger } from "animejs";
+import { Radio } from "lucide-react";
 
 const GLITCH_CHARS = "░▒▓█#$%&!?01X*+⚔†";
+
+// 28 Dynamic Audio Spectrum Frequency Bars (Inspired by Swishy Audio Visualizer)
+const BAR_COUNT = 28;
+const BARS_CONFIG = Array.from({ length: BAR_COUNT }, (_, i) => ({
+  frequency: 0.08 + (i % 7) * 0.025,
+  phase: i * 0.28,
+  amplitude: 0.35 + Math.sin(i * 0.22) * 0.25,
+}));
 
 export default function KineticTitle({ title, tagline, theme, isPlaying, isExhausted }) {
   const containerRef = useRef(null);
   const taglineRef = useRef(null);
   const waveAnimRef = useRef(null);
+  const barsCanvasRef = useRef(null);
   const [displayText, setDisplayText] = useState(title);
   const [isGlitchingText, setIsGlitchingText] = useState(false);
 
-  const isEx        = isExhausted && theme === "campus";
-  const isHiphop    = theme === "hiphop";
-  const isStreet    = theme === "street";
+  const isEx     = isExhausted && theme === "campus";
+  const isHiphop = theme === "hiphop";
+  const isStreet = theme === "street";
 
-  // Per-theme tailored color gradients that harmonize with the visual art
+  // Mood color schemes & gradients
   const gradient = isEx
     ? "linear-gradient(175deg, #ffffff 0%, #ccfbf1 28%, #5eead4 60%, #0d9488 100%)"
     : isHiphop
@@ -25,7 +35,15 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
     ? "linear-gradient(175deg, #ffffff 0%, #e0f2fe 28%, #7dd3fc 62%, #38bdf8 100%)"
     : "linear-gradient(175deg, #ffffff 0%, #fef3c7 30%, #fde68a 60%, #f59e0b 100%)";
 
-  // Retained refined Playfair display typography
+  const themeHue = isEx ? 172 : isHiphop ? 275 : isStreet ? 200 : 38;
+  const themeGlow = isEx
+    ? "rgba(45, 212, 191, 0.45)"
+    : isHiphop
+    ? "rgba(168, 85, 247, 0.55)"
+    : isStreet
+    ? "rgba(56, 189, 248, 0.45)"
+    : "rgba(245, 158, 11, 0.45)";
+
   const titleClass = "font-display italic tracking-tight font-normal";
   const sizeClass = "text-[2.25rem] min-[390px]:text-[2.75rem] sm:text-8xl lg:text-9xl leading-none";
 
@@ -36,6 +54,14 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
     : isStreet
     ? "#bae6fd"
     : "#fef08a";
+
+  const moodLabel = isEx
+    ? "SANCTUARY • CALM FREQUENCY"
+    : isHiphop
+    ? "BOOM BAP • 90s CYPHER"
+    : isStreet
+    ? "RAINY ROUTE • MIDNIGHT LO-FI"
+    : "CAMPUS VIBES • GOLDEN HOUR";
 
   // Fast Glitch Scramble Reveal on Sanctuary Switch
   useEffect(() => {
@@ -118,9 +144,9 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
 
     if (isPlaying && chars.length > 0) {
       waveAnimRef.current = animate(chars, {
-        translateY: [-3, 3],
-        delay: stagger(60, { from: "center" }),
-        duration: 1400,
+        translateY: [-4, 4],
+        delay: stagger(55, { from: "center" }),
+        duration: 1300,
         alternate: true,
         loop: true,
         ease: "inOutSine",
@@ -142,24 +168,96 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
     };
   }, [isPlaying]);
 
+  // 60FPS Swishy Audio Visualizer Canvas Spectrum Bars
+  useEffect(() => {
+    const canvas = barsCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let frame = 0;
+    let animId;
+
+    const renderBars = () => {
+      frame++;
+      const width = canvas.width;
+      const height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
+
+      const totalBars = BAR_COUNT;
+      const gap = 4;
+      const barW = (width - (totalBars - 1) * gap) / totalBars;
+      const maxHeight = height * 0.85;
+
+      for (let i = 0; i < totalBars; i++) {
+        const config = BARS_CONFIG[i];
+        const wave = isPlaying
+          ? Math.sin(frame * config.frequency + config.phase) * config.amplitude + 0.55
+          : 0.12 + Math.sin(frame * 0.02 + config.phase) * 0.05;
+
+        const currentBarH = Math.max(3, maxHeight * wave);
+        const x = i * (barW + gap);
+        const y = height - currentBarH;
+
+        // Dynamic Swishy HSL Hue Gradient Glow
+        const hueShift = themeHue + (isPlaying ? Math.sin(frame * 0.04 + i * 0.1) * 15 : 0);
+        const lightness = isPlaying ? 65 : 45;
+
+        ctx.fillStyle = `hsl(${hueShift}, 85%, ${lightness}%)`;
+        ctx.shadowColor = `hsla(${hueShift}, 90%, 50%, ${isPlaying ? 0.75 : 0.3})`;
+        ctx.shadowBlur = isPlaying ? 8 : 2;
+
+        // Rounded pill bar
+        ctx.beginPath();
+        const r = barW * 0.4;
+        ctx.roundRect(x, y, barW, currentBarH, [r, r, 0, 0]);
+        ctx.fill();
+      }
+
+      animId = requestAnimationFrame(renderBars);
+    };
+
+    animId = requestAnimationFrame(renderBars);
+
+    return () => {
+      cancelAnimationFrame(animId);
+    };
+  }, [isPlaying, themeHue]);
+
   return (
     <div className="flex flex-col items-center text-center px-6 z-10 my-auto select-none transition-all duration-500">
-      {/* Main Title Wrapper */}
+      
+      {/* ── 1. SWISHY TOP STATUS PILL: NOW PLAYING ── */}
+      <div className="mb-2 flex items-center gap-2 font-mono text-[9px] sm:text-[11px] font-extrabold uppercase tracking-[0.28em] text-white/70 bg-black/40 border border-white/15 px-3 py-1 rounded-full backdrop-blur-xl shadow-lg animate-fade-in">
+        <Radio size={11} className={isPlaying ? "text-amber-300 animate-pulse" : "text-white/40"} />
+        <span style={{ color: taglineColor }}>{isPlaying ? "NOW PLAYING" : "LIVE RADIO"}</span>
+        <span className="text-white/20">•</span>
+        <span className="text-white/60 tracking-widest">{moodLabel}</span>
+      </div>
+
+      {/* ── 2. MAIN TITLE WITH SWISHY RADIAL AURA BLOOM ── */}
       <div className="gemini-aura-container relative select-none">
-        {/* Mood-Matched Pure Breathing Glow Aura */}
-        <div className={`gemini-aura-halo ${isPlaying ? "gemini-aura-active" : ""}`} />
+        
+        {/* Dynamic Swishy Radial Glow Ellipse */}
+        <div
+          className="pointer-events-none absolute -inset-8 rounded-full blur-[40px] opacity-40 transition-opacity duration-700"
+          style={{
+            background: `radial-gradient(ellipse at center, ${themeGlow} 0%, transparent 70%)`,
+            transform: isPlaying ? "scale(1.15)" : "scale(0.95)",
+          }}
+        />
 
         <h1
           ref={containerRef}
           className={`${titleClass} ${sizeClass} inline-flex flex-wrap justify-center overflow-hidden py-2 relative z-10`}
           style={{
             filter: isEx
-              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 14px rgba(45,212,191,0.45))"
+              ? "drop-shadow(0 6px 22px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 16px rgba(45,212,191,0.5))"
               : isHiphop
-              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 18px rgba(168,85,247,0.55))"
+              ? "drop-shadow(0 6px 22px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 20px rgba(168,85,247,0.6))"
               : isStreet
-              ? "drop-shadow(0 6px 20px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 14px rgba(56,189,248,0.45))"
-              : "drop-shadow(0 6px 20px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 14px rgba(245,158,11,0.4))",
+              ? "drop-shadow(0 6px 22px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 16px rgba(56,189,248,0.5))"
+              : "drop-shadow(0 6px 22px rgba(0,0,0,0.85)) drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 16px rgba(245,158,11,0.45))",
             backfaceVisibility: "hidden",
             WebkitFontSmoothing: "antialiased",
           }}
@@ -186,47 +284,20 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
         </h1>
       </div>
 
-      {/* Dynamic Mood-Matched Animated Separator with Highlight Sweep */}
-      <div className="mt-4 flex items-center gap-3">
-        <div
-          className={`h-px transition-all duration-700 ${
-            isEx
-              ? isPlaying ? "w-16 bg-teal-400 shadow-[0_0_12px_#2dd4bf]" : "w-10 bg-teal-400/60"
-              : isHiphop
-              ? isPlaying ? "w-16 bg-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.8)]" : "w-8 bg-purple-400/60"
-              : isStreet
-              ? isPlaying ? "w-16 bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.8)]" : "w-8 bg-sky-400/60"
-              : isPlaying ? "w-14 bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.6)]" : "w-7 bg-amber-400/50"
-          }`}
-        />
-        <div
-          className={`rounded-full transition-all duration-700 ${
-            isEx
-              ? isPlaying ? "h-2 w-2 bg-teal-300 shadow-[0_0_10px_#2dd4bf] scale-125" : "h-1.5 w-1.5 bg-teal-400/70"
-              : isHiphop
-              ? isPlaying ? "h-2 w-2 bg-purple-300 shadow-[0_0_10px_#c084fc] scale-125" : "h-1.5 w-1.5 bg-purple-400/70"
-              : isStreet
-              ? isPlaying ? "h-2 w-2 bg-sky-300 shadow-[0_0_10px_rgba(56,189,248,0.9)] scale-125" : "h-1.5 w-1.5 bg-sky-400/70"
-              : isPlaying ? "h-2 w-2 bg-amber-300 scale-125 shadow-[0_0_10px_rgba(245,158,11,0.7)]" : "h-1.5 w-1.5 bg-amber-400/60"
-          }`}
-        />
-        <div
-          className={`h-px transition-all duration-700 ${
-            isEx
-              ? isPlaying ? "w-16 bg-teal-400 shadow-[0_0_12px_#2dd4bf]" : "w-10 bg-teal-400/60"
-              : isHiphop
-              ? isPlaying ? "w-16 bg-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.8)]" : "w-8 bg-purple-400/60"
-              : isStreet
-              ? isPlaying ? "w-16 bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.8)]" : "w-8 bg-sky-400/60"
-              : isPlaying ? "w-14 bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.6)]" : "w-7 bg-amber-400/50"
-          }`}
+      {/* ── 3. SWISHY AUDIO VISUALIZER FREQUENCY BARS ── */}
+      <div className="mt-3 flex flex-col items-center">
+        <canvas
+          ref={barsCanvasRef}
+          width={280}
+          height={26}
+          className="h-[22px] w-[240px] sm:w-[280px] drop-shadow-[0_0_12px_rgba(255,255,255,0.2)]"
         />
       </div>
 
-      {/* Cinematic Mood-Matched Tagline */}
+      {/* ── 4. CINEMATIC MOOD-MATCHED TAGLINE ── */}
       <p
         ref={taglineRef}
-        className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.22em] sm:tracking-[0.32em] font-normal mt-3.5 sm:mt-4 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] text-center px-3"
+        className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.22em] sm:tracking-[0.32em] font-normal mt-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] text-center px-3"
         style={{ color: taglineColor }}
       >
         {tagline}
