@@ -239,25 +239,25 @@ body {
   }
 }
 
-/* Fiery Stage Orange & Red Palette for Hip Hop Concert Theme */
+/* Amethyst & Dark Violet Palette for Hip Hop Cypher Theme */
 [data-theme="hiphop"] {
-  --color-amber: #ff5500;
-  --color-rose: #ff2200;
+  --color-amber: #a855f7;
+  --color-rose: #c084fc;
   --color-ink: #070308;
   --color-paper: #ffffff;
 }
 
-/* Concert Stage Stage Light Glow Overlay */
+/* Atmospheric Cypher Stage Light Glow Overlay */
 [data-theme="hiphop"] .hero-bg-hiphop::after {
   content: "";
   position: absolute;
   inset: 0;
   background: 
-    radial-gradient(circle at 50% 45%, rgba(255, 85, 0, 0.3), transparent 60%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.35), transparent 45%, rgba(7, 3, 8, 0.88));
+    radial-gradient(circle at 50% 35%, rgba(168, 85, 247, 0.2), transparent 60%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.25), transparent 45%, rgba(7, 3, 8, 0.85));
   mix-blend-mode: color-dodge;
   pointer-events: none;
-  animation: concert-light-glow 4s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+  animation: concert-light-glow 5s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
 }
 
 @keyframes concert-light-glow {
