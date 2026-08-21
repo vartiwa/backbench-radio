@@ -364,14 +364,26 @@ export default function Player({
     audio.src    = resolvedUrl;
     audio.volume = volumeRef.current / 100;
     audio.muted  = false;
-  }, [trackList, setCurrentTrackId, resolveAudioUrl]);
+
+    if (autoPlay) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setPlaying(true);
+            onPlayStateChange?.(true);
+          })
+          .catch((err) => console.warn("autoPlay failed:", err.message));
+      }
+    }
+  }, [trackList, setCurrentTrackId, resolveAudioUrl, onPlayStateChange]);
 
   const handleNext = useCallback((e) => { e?.stopPropagation(); goToIndex(trackIndex + 1, true);  }, [goToIndex, trackIndex]);
   const handlePrev = useCallback((e) => { e?.stopPropagation(); goToIndex(trackIndex - 1, true);  }, [goToIndex, trackIndex]);
   handleNextRef.current = handleNext;
 
   /* ── Play / Pause toggle ───────────────────────────── */
-  const handleToggle = useCallback((e) => {
+  const handleToggle = useCallback(async (e) => {
     e?.stopPropagation();
     const audio = audioRef.current;
     if (!audio) { console.warn("audioRef is null"); return; }
@@ -379,24 +391,55 @@ export default function Player({
     audio.muted  = false;
     audio.volume = volumeRef.current / 100;
 
+    if (!audio.src || audio.src === "" || audio.src.endsWith("undefined")) {
+      const resolved = await resolveAudioUrl(track);
+      if (resolved) audio.src = resolved;
+    }
+
     if (audio.paused) {
-      audio.play().catch((err) => console.warn("play() failed:", err.name, err.message));
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setPlaying(true);
+            onPlayStateChange?.(true);
+          })
+          .catch((err) => console.warn("play() failed:", err.name, err.message));
+      }
     } else {
       audio.pause();
+      setPlaying(false);
+      onPlayStateChange?.(false);
     }
-  }, []);
+  }, [track, resolveAudioUrl, onPlayStateChange]);
 
-  const handlePlay = useCallback(() => {
+  const handlePlay = useCallback(async () => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = false;
     audio.volume = volumeRef.current / 100;
-    if (audio.paused) {
-      audio.play().catch((err) => console.warn("play() failed or waiting for user gesture:", err.message));
+    if (!audio.src || audio.src === "" || audio.src.endsWith("undefined")) {
+      const resolved = await resolveAudioUrl(track);
+      if (resolved) audio.src = resolved;
     }
-  }, []);
+    if (audio.paused) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setPlaying(true);
+            onPlayStateChange?.(true);
+          })
+          .catch((err) => console.warn("play() failed or waiting for user gesture:", err.message));
+      }
+    }
+  }, [track, resolveAudioUrl, onPlayStateChange]);
 
-  const handlePause = useCallback(() => audioRef.current?.pause(), []);
+  const handlePause = useCallback(() => {
+    audioRef.current?.pause();
+    setPlaying(false);
+    onPlayStateChange?.(false);
+  }, [onPlayStateChange]);
 
   /* ── Mute / Volume ─────────────────────────────────── */
   const handleToggleMute = useCallback((e) => {
