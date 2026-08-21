@@ -105,19 +105,18 @@ export default function Clock({
 
   const headphoneIconColor = isPlaying
     ? isExhausted
-      ? "text-teal-300 animate-pulse"
+      ? "text-teal-300"
       : theme === "hiphop"
-      ? "text-purple-300 animate-pulse"
+      ? "text-purple-300"
       : theme === "street"
-      ? "text-sky-300 animate-pulse"
-      : "text-amber-300 animate-pulse"
+      ? "text-sky-300"
+      : "text-amber-300"
     : "text-white/70";
 
   return (
     <div
-      className="group relative flex items-center gap-3 rounded-[1.8rem] border border-white/15 bg-black/50 p-2 sm:px-3 sm:py-2 backdrop-blur-2xl transition-all duration-300 hover:border-white/30 hover:bg-black/70 hover:shadow-[0_10px_30px_rgba(0,0,0,0.6)] select-none"
+      className="group relative flex items-center gap-3 rounded-[1.8rem] border border-white/15 bg-black/50 p-2 sm:px-3 sm:py-2 backdrop-blur-2xl transition-colors duration-300 hover:border-white/30 hover:bg-black/70 hover:shadow-[0_10px_30px_rgba(0,0,0,0.6)] select-none"
     >
-      {/* ══ 1. ANALOG MINIMALIST CLOCK FACE (Matching Reference Image) ══ */}
       <button
         type="button"
         onClick={handleStatsClick}
@@ -125,44 +124,36 @@ export default function Clock({
         className="flex items-center gap-2.5 cursor-pointer text-left focus:outline-none"
       >
         <div className="relative flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10 shadow-inner">
-          {/* Cardinal Tick Marks (12, 3, 6, 9) */}
           <span className="absolute top-1 h-1 w-0.5 rounded-full bg-paper/50" />
           <span className="absolute bottom-1 h-1 w-0.5 rounded-full bg-paper/50" />
           <span className="absolute left-1 h-0.5 w-1 rounded-full bg-paper/50" />
           <span className="absolute right-1 h-0.5 w-1 rounded-full bg-paper/50" />
 
-          {/* Hour Hand (Broad frosted pill needle) */}
           <div
-            style={{ transform: `rotate(${mounted ? hourDeg : 270}deg)` }}
-            className="absolute inset-0 flex items-center justify-center transition-transform duration-500 will-change-transform"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 origin-bottom transition-transform duration-500 ease-out z-10 pointer-events-none"
+            style={{ transform: `translate(-50%, -50%) rotate(${mounted ? hourDeg : 270}deg)` }}
           >
             <div className="h-3.5 sm:h-4 w-1.5 -translate-y-1.5 rounded-full bg-gradient-to-t from-white/90 to-white/40 shadow-sm" />
           </div>
 
-          {/* Minute Hand (Crisp slender needle) */}
           <div
-            style={{ transform: `rotate(${mounted ? minuteDeg : 340}deg)` }}
-            className="absolute inset-0 flex items-center justify-center transition-transform duration-500 will-change-transform"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 origin-bottom transition-transform duration-500 ease-out z-15 pointer-events-none"
+            style={{ transform: `translate(-50%, -50%) rotate(${mounted ? minuteDeg : 340}deg)` }}
           >
             <div className="h-5 sm:h-6 w-0.5 -translate-y-2.5 rounded-full bg-white/90 shadow-sm" />
           </div>
 
-          {/* Second Hand (Delicate sweeping coral/accent needle) */}
           <div
-            style={{ transform: `rotate(${mounted ? secondDeg : 140}deg)` }}
-            className="absolute inset-0 flex items-center justify-center transition-transform duration-300 will-change-transform"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 origin-bottom pointer-events-none z-20"
+            style={{ transform: `translate(-50%, -50%) rotate(${mounted ? secondDeg : 140}deg)` }}
           >
-            <div
-              style={{ backgroundColor: secondHandColor }}
-              className="h-6 sm:h-7 w-px -translate-y-3 shadow-sm"
-            />
+            <div className="h-5 sm:h-6 w-[1.5px] -translate-y-2.5 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)]" />
+            <div className="h-1.5 w-[1.5px] translate-y-1 rounded-full bg-rose-500 opacity-60" />
           </div>
 
-          {/* Elevated Center Disc Hub */}
           <div className="relative z-20 h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-full border border-white/20 bg-white/20 backdrop-blur-md shadow-sm" />
         </div>
 
-        {/* Stacked Digital Hours & Minutes + Day */}
         <div className="flex flex-col justify-center">
           <div className="flex items-baseline gap-1 font-mono tracking-tight leading-none">
             <span className="text-base sm:text-lg font-extrabold text-white">
@@ -179,31 +170,26 @@ export default function Clock({
         </div>
       </button>
 
-      {/* ══ 2. SUBTLE VERTICAL SEPARATOR LINE / COLOR BLEND ══ */}
       <div className="h-9 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent shrink-0 mx-0.5" />
 
-      {/* ══ 3. RIGHT SECTION: SVG ALARM LAUNCHER (ABOVE) + LISTENING TIME (BELOW) ══ */}
       <div className="flex flex-col items-start justify-center gap-1.5 pl-0.5">
-        
-        {/* Above: Normal Looking SVG Alarm Button */}
         <button
           type="button"
           onClick={handleTimerClick}
           title="Open Focus Timer & Song Alarm"
           aria-label="Open Focus Timer & Alarm"
-          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/15 hover:border-white/20 px-2 py-0.5 text-[10px] font-mono font-medium text-white/75 hover:text-white transition-all cursor-pointer shadow-sm active:scale-95"
+          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/15 hover:border-white/20 px-2 py-0.5 text-[10px] font-mono font-medium text-white/75 hover:text-white transition-colors cursor-pointer shadow-sm active:scale-95"
         >
           <AlarmClock size={11} className="text-white/70" />
           <span>Alarm</span>
         </button>
 
-        {/* Below: Prominent Listening Time Badge with Subtle Mood Glow when Playing */}
         <button
           type="button"
           onClick={handleStatsClick}
           title="Personal Listening Telemetry & Journal"
           aria-label="Personal Listening Stats"
-          className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-mono font-extrabold transition-all cursor-pointer active:scale-95 ${listeningGlowStyle}`}
+          className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-mono font-extrabold transition-colors duration-300 cursor-pointer active:scale-95 ${listeningGlowStyle}`}
         >
           <Headphones size={11} className={headphoneIconColor} />
           <span className="tabular-nums">{formatListeningDuration(todaySeconds)}</span>
