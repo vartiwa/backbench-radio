@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState, memo } from "react";
 import { ALL_TRACKS, PLAYLISTS } from "../lib/tracks";
 import { getCustomTracks, getAudioBlob, getCachedBlobUrl, setCachedBlobUrl } from "../lib/customTracks";
 
@@ -42,8 +42,8 @@ const IconPlaylist = () => (
 );
 
 /* ── Vinyl Disc ─────────────────────────────────────── */
-/* ── Realistic Vinyl Turntable Disc with Animated Tonearm ── */
-function Vinyl({ playing, track, moodAura = "bg-amber-400/25", moodHalo = "shadow-[0_0_20px_rgba(245,158,11,0.35)]" }) {
+/* ── Realistic Vinyl Turntable Disc with Animated Tonearm (Memoized to prevent timeupdate re-render thrashing) ── */
+const Vinyl = React.memo(function Vinyl({ playing, track, moodAura = "bg-amber-400/25", moodHalo = "shadow-[0_0_20px_rgba(245,158,11,0.35)]" }) {
   const initials = track?.title
     ? track.title.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase()
     : "BB";
@@ -63,11 +63,9 @@ function Vinyl({ playing, track, moodAura = "bg-amber-400/25", moodHalo = "shado
         }`}
       />
 
-      {/* ── Spinning Vinyl Record ── */}
+      {/* ── Spinning Vinyl Record (No transition-all on spinning element to prevent transform fighting) ── */}
       <div
-        className={`relative h-full w-full rounded-full overflow-hidden shadow-2xl ring-1 transition-all duration-500 vinyl-spin ${
-          playing ? "ring-white/30 shadow-[inset_0_0_12px_rgba(0,0,0,0.8)]" : "ring-white/15"
-        }`}
+        className="relative h-full w-full rounded-full overflow-hidden shadow-2xl ring-1 ring-white/20 vinyl-spin"
         data-playing={playing}
       >
         {/* Realistic Vinyl Micro-Grooves */}
@@ -104,7 +102,7 @@ function Vinyl({ playing, track, moodAura = "bg-amber-400/25", moodHalo = "shado
 
       {/* ── Turntable Tonearm (Pivots onto record when playing) ── */}
       <div
-        className="pointer-events-none absolute -top-1 -right-1 z-30 transition-transform duration-700 ease-out origin-top-right"
+        className="pointer-events-none absolute -top-1 -right-1 z-30 transition-transform duration-700 ease-out origin-top-right will-change-transform"
         style={{
           transform: playing ? "rotate(14deg) translateY(1px)" : "rotate(-24deg) translateY(-2px)",
         }}
@@ -132,10 +130,10 @@ function Vinyl({ playing, track, moodAura = "bg-amber-400/25", moodHalo = "shado
       </div>
     </div>
   );
-}
+});
 
-/* ── Equalizer Bars ─────────────────────────────────── */
-function Equalizer({ playing, colorClass = "bg-amber-400/90" }) {
+/* ── Equalizer Bars (Memoized) ─────────────────────── */
+const Equalizer = React.memo(function Equalizer({ playing, colorClass = "bg-amber-400/90" }) {
   return (
     <div className="flex items-end gap-[2px] h-3.5 w-3 shrink-0">
       <div className={`w-[3px] rounded-full ${colorClass} ${playing ? "eq-bar-1" : "h-[3px]"}`} />
@@ -143,10 +141,10 @@ function Equalizer({ playing, colorClass = "bg-amber-400/90" }) {
       <div className={`w-[3px] rounded-full ${colorClass} ${playing ? "eq-bar-3" : "h-[4px]"}`} />
     </div>
   );
-}
+});
 
-/* ── Seek Bar ───────────────────────────────────────── */
-function SeekBar({ currentTime, duration, onSeek, seekFill = "bg-amber-400" }) {
+/* ── Seek Bar (Memoized) ────────────────────────────── */
+const SeekBar = React.memo(function SeekBar({ currentTime, duration, onSeek, seekFill = "bg-amber-400" }) {
   const trackRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragTime, setDragTime]     = useState(0);
@@ -183,21 +181,21 @@ function SeekBar({ currentTime, duration, onSeek, seekFill = "bg-amber-400" }) {
       className="group relative h-5 w-full cursor-pointer touch-none flex items-center"
       role="slider" aria-valuemin={0} aria-valuemax={duration} aria-valuenow={isDragging ? dragTime : currentTime} aria-label="Track progress">
       <div className="h-[3px] w-full rounded-full bg-white/15 overflow-hidden">
-        <div className={`h-full rounded-full ${seekFill} will-change-transform`} style={{ width: `${pct}%` }} />
+        <div className={`h-full rounded-full ${seekFill}`} style={{ width: `${pct}%` }} />
       </div>
-      <div className={`absolute top-1/2 h-3 w-3 -translate-y-1/2 -translate-x-1/2 rounded-full bg-white shadow-sm transition-opacity ${isDragging ? "opacity-100 scale-110" : "opacity-0 group-hover:opacity-100"}`} style={{ left: `${pct}%` }} />
+      <div className={`absolute top-1/2 h-3 w-3 -translate-y-1/2 -translate-x-1/2 rounded-full bg-white shadow-sm transition-opacity duration-150 ${isDragging ? "opacity-100 scale-110" : "opacity-0 group-hover:opacity-100"}`} style={{ left: `${pct}%` }} />
     </div>
   );
-}
+});
 
-/* ── Tiny Pill Button ───────────────────────────────── */
-function Pill({ onClick, active, highlight, title, children }) {
+/* ── Tiny Pill Button (Memoized) ────────────────────── */
+const Pill = React.memo(function Pill({ onClick, active, highlight, title, children }) {
   return (
     <button
       type="button"
       onClick={onClick}
       title={title}
-      className={`relative p-2 rounded-full transition-all duration-300 cursor-pointer ${
+      className={`relative p-2 rounded-full transition-colors duration-200 cursor-pointer ${
         highlight
           ? "text-white bg-white/20 ring-1 ring-white/40 shadow-[0_0_12px_rgba(255,255,255,0.3)] scale-105"
           : active
@@ -208,7 +206,7 @@ function Pill({ onClick, active, highlight, title, children }) {
       {children}
     </button>
   );
-}
+});
 
 /* ═══════════════════════════════════════════════════════
    PLAYER  —  imperative Audio object, same as test page
@@ -526,7 +524,7 @@ export default function Player({
     <div className="relative w-full max-w-2xl mx-auto px-4">
       {/* NO <audio> JSX element — we manage it imperatively via audioRef */}
 
-      <div className={`rounded-[24px] sm:rounded-full border transition-all duration-700 transform-gpu ${themeContainerClass} backdrop-blur-3xl p-3 sm:p-2.5 sm:pr-4`}>
+      <div className={`rounded-[24px] sm:rounded-full border transition-colors duration-500 ${themeContainerClass} backdrop-blur-3xl p-3 sm:p-2.5 sm:pr-4`}>
 
         {/* ── Desktop ── */}
         <div className="hidden sm:flex items-center gap-3">

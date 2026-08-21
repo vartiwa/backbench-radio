@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, memo } from "react";
 import { animate, stagger } from "animejs";
 import { Radio } from "lucide-react";
 
 const GLITCH_CHARS = "░▒▓█#$%&!?01X*+⚔†";
 
-export default function KineticTitle({ title, tagline, theme, isPlaying, isExhausted }) {
+function KineticTitle({ title, tagline, theme, isPlaying, isExhausted }) {
   const containerRef = useRef(null);
   const taglineRef = useRef(null);
   const [displayText, setDisplayText] = useState(title);
@@ -245,3 +245,5 @@ export default function KineticTitle({ title, tagline, theme, isPlaying, isExhau
     </div>
   );
 }
+
+export default memo(KineticTitle);
