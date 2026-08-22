@@ -472,7 +472,7 @@ export default function Experience() {
         className="w-full flex items-start justify-between z-20"
         style={{ paddingTop: edge, paddingLeft: edgeL, paddingRight: edgeR }}
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-col items-start gap-2">
           <Clock
             todaySeconds={todaySeconds}
             isPlaying={isPlaying}
@@ -481,6 +481,26 @@ export default function Experience() {
             onOpenStats={() => setActiveModal((prev) => (prev === "stats" ? null : "stats"))}
             onOpenTimer={() => setActiveModal((prev) => (prev === "timer" ? null : "timer"))}
           />
+
+          {/* YouTube Pill just below the clock */}
+          <button
+            type="button"
+            onClick={() => setActiveModal("youtube")}
+            className="group flex items-center gap-2 rounded-full border border-white/15 bg-black/50 hover:bg-black/80 hover:border-red-500/40 px-3 py-1.5 text-xs text-white/85 hover:text-white backdrop-blur-2xl transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(239,68,68,0.35)] cursor-pointer active:scale-95 select-none"
+            title="Stream YouTube & YouTube Music"
+          >
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-white shadow-sm group-hover:scale-110 transition-transform">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-2.5 w-2.5 ml-0.5">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </span>
+            <span className="font-mono text-[11px] font-extrabold tracking-tight text-white group-hover:text-red-300 transition-colors">
+              YouTube Music
+            </span>
+            <span className="flex items-center justify-center rounded-full bg-white/10 px-1.5 py-0.2 text-[9px] font-mono text-white/60 group-hover:text-white group-hover:bg-white/20 transition-all">
+              + Stream
+            </span>
+          </button>
         </div>
         <div className="flex items-center gap-2.5">
           <ThemeToggle
@@ -670,7 +690,8 @@ export default function Experience() {
       {/* Modals */}
       <div className="z-50 relative">
         <PlaylistModal
-          isOpen={activeModal === 'playlist'}
+          isOpen={activeModal === 'playlist' || activeModal === 'youtube'}
+          initialShowLink={activeModal === 'youtube'}
           onClose={() => setActiveModal(null)}
           onSwitchModal={(m) => setActiveModal(m)}
           currentTrackId={currentTrackId}

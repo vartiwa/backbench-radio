@@ -15,6 +15,10 @@ import {
   Disc,
   FolderOpen,
   CheckCircle2,
+  Link2,
+  Plus,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { PLAYLISTS } from "../lib/tracks";
 import {
@@ -26,9 +30,12 @@ import {
   setCachedBlobUrl,
   getCachedBlobUrl,
 } from "../lib/customTracks";
+import { extractYouTubeId, fetchYouTubeMetadata } from "../lib/youtube";
+import { extractSpotifyInfo, fetchSpotifyMetadata } from "../lib/spotify";
 
 export default function PlaylistModal({
   isOpen,
+  initialShowLink = false,
   onClose,
   onSwitchModal,
   currentTrackId,
@@ -42,6 +49,20 @@ export default function PlaylistModal({
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
+
+  // On-demand Streaming Link State (YouTube & Spotify)
+  const [showLinkInput, setShowLinkInput] = useState(false);
+  const [inputUrl, setInputUrl] = useState("");
+  const [isLoadingLink, setIsLoadingLink] = useState(false);
+  const [linkError, setLinkError] = useState(null);
+  const [linkSuccess, setLinkSuccess] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && initialShowLink) {
+      setActiveTab("custom");
+      setShowLinkInput(true);
+    }
+  }, [isOpen, initialShowLink]);
 
   // Load custom tracks from localStorage & IndexedDB
   useEffect(() => {
@@ -168,6 +189,99 @@ export default function PlaylistModal({
     setIsUploading(false);
   };
 
+  // Handle YouTube / Spotify URL parsing & adding
+  const handleAddLink = async (e) => {
+    e?.preventDefault();
+    const url = inputUrl.trim();
+    if (!url) return;
+
+    setIsLoadingLink(true);
+    setLinkError(null);
+
+    // 1. Try YouTube
+    const ytId = extractYouTubeId(url);
+    if (ytId) {
+      const meta = await fetchYouTubeMetadata(ytId);
+      const id = `yt-${ytId}-${Date.now().toString(36)}`;
+      const newTrack = {
+        id,
+        title: meta.title,
+        artist: meta.artist,
+        duration: 210, // default placeholder until stream metadata arrives
+        audioUrl: "youtube",
+        sourceType: "youtube",
+        youtubeId: ytId,
+        thumbnail: meta.thumbnail,
+        mood: "youtube-stream",
+        addedAt: Date.now(),
+      };
+
+      setCustomTracks((prev) => {
+        const updated = [newTrack, ...prev];
+        saveCustomTracks(
+          updated.map((t) => ({
+            ...t,
+            audioUrl: t.sourceType === "youtube" ? "youtube" : t.sourceType === "spotify" ? "spotify" : "indexeddb",
+          }))
+        );
+        return updated;
+      });
+
+      setInputUrl("");
+      setShowLinkInput(false);
+      setLinkSuccess(true);
+      setTimeout(() => setLinkSuccess(false), 3000);
+
+      if (onSelectTrack) onSelectTrack(newTrack);
+      setIsLoadingLink(false);
+      return;
+    }
+
+    // 2. Try Spotify
+    const spotInfo = extractSpotifyInfo(url);
+    if (spotInfo) {
+      const meta = await fetchSpotifyMetadata(url);
+      const id = `spotify-${spotInfo.id}-${Date.now().toString(36)}`;
+      const newTrack = {
+        id,
+        title: meta.title,
+        artist: meta.artist,
+        duration: 180,
+        audioUrl: "spotify",
+        sourceType: "spotify",
+        spotifyId: spotInfo.id,
+        embedUrl: spotInfo.embedUrl,
+        thumbnail: meta.thumbnail,
+        mood: "spotify-track",
+        addedAt: Date.now(),
+      };
+
+      setCustomTracks((prev) => {
+        const updated = [newTrack, ...prev];
+        saveCustomTracks(
+          updated.map((t) => ({
+            ...t,
+            audioUrl: t.sourceType === "youtube" ? "youtube" : t.sourceType === "spotify" ? "spotify" : "indexeddb",
+          }))
+        );
+        return updated;
+      });
+
+      setInputUrl("");
+      setShowLinkInput(false);
+      setLinkSuccess(true);
+      setTimeout(() => setLinkSuccess(false), 3000);
+
+      if (onSelectTrack) onSelectTrack(newTrack);
+      setIsLoadingLink(false);
+      return;
+    }
+
+    // Invalid link
+    setLinkError("Please enter a valid YouTube, YouTube Music, or Spotify link");
+    setIsLoadingLink(false);
+  };
+
   // Delete Custom Track
   const handleDeleteTrack = async (e, id) => {
     e.stopPropagation();
@@ -177,7 +291,7 @@ export default function PlaylistModal({
       saveCustomTracks(
         updated.map((t) => ({
           ...t,
-          audioUrl: "indexeddb",
+          audioUrl: t.sourceType === "youtube" ? "youtube" : t.sourceType === "spotify" ? "spotify" : "indexeddb",
         }))
       );
       return updated;
@@ -419,6 +533,90 @@ export default function PlaylistModal({
                     </p>
                   </div>
                 </div>
+
+                {/* ── On-Demand YouTube / Spotify Link Activation ── */}
+                {!showLinkInput ? (
+                  <div className="mt-3 flex items-center justify-between gap-2 pt-2 border-t border-white/10">
+                    <span className="text-[11px] text-white/50 font-mono flex items-center gap-1">
+                      <Link2 size={12} className="text-white/40" />
+                      <span>Stream online audio:</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowLinkInput(true);
+                        setLinkError(null);
+                      }}
+                      className="flex items-center gap-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 px-3 py-1 text-xs font-bold text-white transition-all cursor-pointer shadow-sm active:scale-95"
+                    >
+                      <Plus size={13} className="text-[#dcf87a]" />
+                      <span className="flex items-center gap-1">
+                        <span className="text-rose-400 font-extrabold">YouTube</span>
+                        <span className="text-white/30">/</span>
+                        <span className="text-emerald-400 font-extrabold">Spotify</span>
+                      </span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-3 rounded-2xl bg-black/60 border border-white/20 p-3.5 space-y-2.5 animate-fade-in">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                        <Link2 size={13} className="text-[#dcf87a]" />
+                        <span>Paste YouTube, YouTube Music, or Spotify Link</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowLinkInput(false);
+                          setLinkError(null);
+                        }}
+                        className="text-white/40 hover:text-white text-xs cursor-pointer p-1 rounded-full hover:bg-white/10"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleAddLink} className="flex items-center gap-2">
+                      <input
+                        type="url"
+                        value={inputUrl}
+                        onChange={(e) => {
+                          setInputUrl(e.target.value);
+                          setLinkError(null);
+                        }}
+                        placeholder="Paste YouTube or Spotify URL here..."
+                        className="flex-1 rounded-xl bg-white/10 border border-white/15 px-3.5 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[#dcf87a] transition-all font-mono"
+                        autoFocus
+                      />
+                      <button
+                        type="submit"
+                        disabled={isLoadingLink || !inputUrl.trim()}
+                        className="rounded-xl bg-[#dcf87a] hover:bg-[#cbf25b] disabled:opacity-50 text-black px-4 py-2 text-xs font-extrabold transition-all cursor-pointer shrink-0 shadow-md flex items-center gap-1.5"
+                      >
+                        {isLoadingLink ? (
+                          <Loader2 size={13} className="animate-spin" />
+                        ) : (
+                          <Plus size={13} />
+                        )}
+                        <span>{isLoadingLink ? "Fetching..." : "Add & Play"}</span>
+                      </button>
+                    </form>
+
+                    {linkError && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-rose-300 font-mono">
+                        <AlertCircle size={12} />
+                        <span>{linkError}</span>
+                      </div>
+                    )}
+
+                    {linkSuccess && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-emerald-300 font-mono">
+                        <CheckCircle2 size={12} />
+                        <span>Track added to your library!</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -441,7 +639,7 @@ export default function PlaylistModal({
                   <div className="py-14 text-center text-white/40">
                     <Music size={36} className="mx-auto mb-2 opacity-40" />
                     <p className="text-sm font-extrabold text-white/70">No tracks in your library yet</p>
-                    <p className="text-xs text-white/40 mt-1">Drag and drop audio files above to start listening!</p>
+                    <p className="text-xs text-white/40 mt-1">Drag & drop audio files or add a YouTube / Spotify link above!</p>
                   </div>
                 ) : (
                   currentPlaylistTracks.map((track) => {
@@ -475,9 +673,21 @@ export default function PlaylistModal({
                           </button>
 
                           <div className="min-w-0">
-                            <p className="text-xs font-extrabold text-white truncate group-hover:text-amber-200 transition-colors">
-                              {track.title}
-                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-xs font-extrabold text-white truncate group-hover:text-amber-200 transition-colors">
+                                {track.title}
+                              </p>
+                              {track.sourceType === "youtube" && (
+                                <span className="shrink-0 rounded bg-rose-500/25 border border-rose-500/40 px-1.5 py-0.2 text-[8px] font-mono font-bold text-rose-300">
+                                  YT MUSIC
+                                </span>
+                              )}
+                              {track.sourceType === "spotify" && (
+                                <span className="shrink-0 rounded bg-emerald-500/25 border border-emerald-500/40 px-1.5 py-0.2 text-[8px] font-mono font-bold text-emerald-300">
+                                  SPOTIFY
+                                </span>
+                              )}
+                            </div>
                             <p className="text-[10px] text-white/50 truncate font-mono">
                               {track.artist}
                             </p>

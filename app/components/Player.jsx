@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState, memo } from "react";
 import { ALL_TRACKS, PLAYLISTS } from "../lib/tracks";
 import { getCustomTracks, getAudioBlob, getCachedBlobUrl, setCachedBlobUrl } from "../lib/customTracks";
+import { youtubeManager } from "../lib/youtube";
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -309,6 +310,36 @@ export default function Player({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /* ── Subscribe to YouTube Player Events ─────────────── */
+  useEffect(() => {
+    if (!youtubeManager) return;
+    const unsubscribe = youtubeManager.subscribe((event, data) => {
+      if (track?.sourceType === "youtube" || track?.youtubeId) {
+        if (event === "play") {
+          setPlaying(true);
+          onPlayStateChange?.(true);
+          if (data.duration && data.duration > 0) setDuration(data.duration);
+        } else if (event === "pause") {
+          setPlaying(false);
+          onPlayStateChange?.(false);
+        } else if (event === "ended") {
+          if (repeatRef.current) {
+            youtubeManager.seekTo(0);
+            youtubeManager.play();
+          } else {
+            handleNextRef.current?.();
+          }
+        } else if (event === "timeupdate") {
+          if (data.currentTime !== undefined) setCurrentTime(data.currentTime);
+          if (data.duration && data.duration > 0) setDuration(data.duration);
+        } else if (event === "error") {
+          setLoadError(data.message || "YouTube stream error");
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, [track, onPlayStateChange]);
+
   /* ── Ref to avoid stale closure in onEnded ─────────── */
   const handleNextRef = useRef(null);
 
@@ -340,6 +371,26 @@ export default function Player({
     setCurrentTrackId(nextTrack.id);
     setLoadError(null);
 
+    // 1. If next track is YouTube
+    if (nextTrack.sourceType === "youtube" || nextTrack.youtubeId) {
+      audioRef.current?.pause();
+      if (youtubeManager) {
+        youtubeManager.loadVideo(nextTrack.youtubeId, autoPlay);
+        youtubeManager.setVolume(volumeRef.current);
+        youtubeManager.setMuted(muted);
+      }
+      if (autoPlay) {
+        setPlaying(true);
+        onPlayStateChange?.(true);
+      }
+      return;
+    }
+
+    // 2. If standard local audio track
+    if (youtubeManager) {
+      youtubeManager.stop();
+    }
+
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -365,7 +416,7 @@ export default function Player({
           .catch((err) => console.warn("autoPlay failed:", err.message));
       }
     }
-  }, [trackList, setCurrentTrackId, resolveAudioUrl, onPlayStateChange]);
+  }, [trackList, setCurrentTrackId, resolveAudioUrl, onPlayStateChange, muted]);
 
   const handleNext = useCallback((e) => { e?.stopPropagation(); goToIndex(trackIndex + 1, true);  }, [goToIndex, trackIndex]);
   const handlePrev = useCallback((e) => { e?.stopPropagation(); goToIndex(trackIndex - 1, true);  }, [goToIndex, trackIndex]);
@@ -374,6 +425,26 @@ export default function Player({
   /* ── Play / Pause toggle ───────────────────────────── */
   const handleToggle = useCallback(async (e) => {
     e?.stopPropagation();
+
+    // YouTube track
+    if (track?.sourceType === "youtube" || track?.youtubeId) {
+      audioRef.current?.pause();
+      if (!youtubeManager) return;
+      if (playing) {
+        youtubeManager.pause();
+        setPlaying(false);
+        onPlayStateChange?.(false);
+      } else {
+        youtubeManager.play();
+        setPlaying(true);
+        onPlayStateChange?.(true);
+      }
+      return;
+    }
+
+    // Standard HTML5 Audio
+    if (youtubeManager) youtubeManager.stop();
+
     const audio = audioRef.current;
     if (!audio) { console.warn("audioRef is null"); return; }
 
@@ -400,9 +471,21 @@ export default function Player({
       setPlaying(false);
       onPlayStateChange?.(false);
     }
-  }, [track, resolveAudioUrl, onPlayStateChange]);
+  }, [track, resolveAudioUrl, onPlayStateChange, playing]);
 
   const handlePlay = useCallback(async () => {
+    if (track?.sourceType === "youtube" || track?.youtubeId) {
+      audioRef.current?.pause();
+      if (youtubeManager) {
+        youtubeManager.play();
+        setPlaying(true);
+        onPlayStateChange?.(true);
+      }
+      return;
+    }
+
+    if (youtubeManager) youtubeManager.stop();
+
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = false;
@@ -425,16 +508,20 @@ export default function Player({
   }, [track, resolveAudioUrl, onPlayStateChange]);
 
   const handlePause = useCallback(() => {
+    if (track?.sourceType === "youtube" || track?.youtubeId) {
+      if (youtubeManager) youtubeManager.pause();
+    }
     audioRef.current?.pause();
     setPlaying(false);
     onPlayStateChange?.(false);
-  }, [onPlayStateChange]);
+  }, [track, onPlayStateChange]);
 
   /* ── Mute / Volume ─────────────────────────────────── */
   const handleToggleMute = useCallback((e) => {
     e?.stopPropagation();
     const next = !muted;
     setMuted(next);
+    if (youtubeManager) youtubeManager.setMuted(next);
     if (audioRef.current) audioRef.current.muted = next;
   }, [muted]);
 
@@ -442,6 +529,11 @@ export default function Player({
     const val = parseInt(e.target.value, 10);
     setVolume(val);
     volumeRef.current = val;
+    if (youtubeManager) {
+      youtubeManager.setVolume(val);
+      if (val === 0) youtubeManager.setMuted(true);
+      else youtubeManager.setMuted(false);
+    }
     if (audioRef.current) {
       audioRef.current.volume = val / 100;
       if (val === 0) { audioRef.current.muted = true;  setMuted(true);  }
@@ -451,16 +543,38 @@ export default function Player({
 
   /* ── Seek ──────────────────────────────────────────── */
   const handleSeek = useCallback((seconds) => {
+    if (track?.sourceType === "youtube" || track?.youtubeId) {
+      if (youtubeManager && isFinite(seconds)) {
+        youtubeManager.seekTo(seconds);
+        setCurrentTime(seconds);
+      }
+      return;
+    }
     if (audioRef.current && isFinite(seconds)) {
       audioRef.current.currentTime = seconds;
       setCurrentTime(seconds);
     }
-  }, []);
+  }, [track]);
 
   const playCustomTrack = useCallback(async (trackObj) => {
     if (!trackObj) return;
     setCurrentTrackId(trackObj.id);
     setLoadError(null);
+
+    if (trackObj.sourceType === "youtube" || trackObj.youtubeId) {
+      audioRef.current?.pause();
+      if (youtubeManager) {
+        youtubeManager.loadVideo(trackObj.youtubeId, true);
+        youtubeManager.setVolume(volumeRef.current);
+        youtubeManager.setMuted(muted);
+      }
+      setPlaying(true);
+      onPlayStateChange?.(true);
+      return;
+    }
+
+    if (youtubeManager) youtubeManager.stop();
+
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -471,7 +585,7 @@ export default function Player({
     audio.src = resolvedUrl;
     audio.volume = volumeRef.current / 100;
     audio.muted = false;
-  }, [setCurrentTrackId, resolveAudioUrl]);
+  }, [setCurrentTrackId, resolveAudioUrl, muted, onPlayStateChange]);
 
   /* ── Register hotkey handlers ──────────────────────── */
   useEffect(() => {
