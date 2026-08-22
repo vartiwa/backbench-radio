@@ -129,29 +129,44 @@ export default function Clock({
           <span className="absolute left-1 h-0.5 w-1 rounded-full bg-paper/50" />
           <span className="absolute right-1 h-0.5 w-1 rounded-full bg-paper/50" />
 
+          {/* Hour Hand (Broad frosted pill needle) */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 origin-bottom transition-transform duration-500 ease-out z-10 pointer-events-none"
-            style={{ transform: `translate(-50%, -50%) rotate(${mounted ? hourDeg : 270}deg)` }}
+            style={{ transform: `rotate(${mounted ? hourDeg : 270}deg)` }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none transition-transform duration-500 ease-out z-10"
           >
-            <div className="h-3.5 sm:h-4 w-1.5 -translate-y-1.5 rounded-full bg-gradient-to-t from-white/90 to-white/40 shadow-sm" />
+            <div className="h-3.5 sm:h-4 w-1 sm:w-1.5 -translate-y-1.5 sm:-translate-y-2 rounded-full bg-gradient-to-t from-white/95 to-white/50 shadow-sm" />
           </div>
 
+          {/* Minute Hand (Crisp slender needle) */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 origin-bottom transition-transform duration-500 ease-out z-15 pointer-events-none"
-            style={{ transform: `translate(-50%, -50%) rotate(${mounted ? minuteDeg : 340}deg)` }}
+            style={{ transform: `rotate(${mounted ? minuteDeg : 340}deg)` }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none transition-transform duration-500 ease-out z-15"
           >
-            <div className="h-5 sm:h-6 w-0.5 -translate-y-2.5 rounded-full bg-white/90 shadow-sm" />
+            <div className="h-5 sm:h-6 w-0.5 -translate-y-2.5 sm:-translate-y-3 rounded-full bg-white/90 shadow-sm" />
           </div>
 
+          {/* Second Hand (Delicate sweeping coral needle with counterweight) */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 origin-bottom pointer-events-none z-20"
-            style={{ transform: `translate(-50%, -50%) rotate(${mounted ? secondDeg : 140}deg)` }}
+            style={{ transform: `rotate(${mounted ? secondDeg : 140}deg)` }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none transition-transform duration-300 ease-out z-20"
           >
-            <div className="h-5 sm:h-6 w-[1.5px] -translate-y-2.5 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)]" />
-            <div className="h-1.5 w-[1.5px] translate-y-1 rounded-full bg-rose-500 opacity-60" />
+            <div
+              style={{ backgroundColor: secondHandColor }}
+              className="h-5 sm:h-6 w-[1.5px] -translate-y-2.5 sm:-translate-y-3 rounded-full shadow-[0_0_6px_rgba(244,63,94,0.8)]"
+            />
+            <div
+              style={{ backgroundColor: secondHandColor }}
+              className="absolute h-1.5 w-[1.5px] translate-y-1.5 rounded-full opacity-60"
+            />
           </div>
 
-          <div className="relative z-20 h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-full border border-white/20 bg-white/20 backdrop-blur-md shadow-sm" />
+          {/* Center Cap Hub with Micro-Pin */}
+          <div className="relative z-30 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border border-white/25 bg-white/20 backdrop-blur-md shadow-sm flex items-center justify-center">
+            <div
+              style={{ backgroundColor: secondHandColor }}
+              className="h-1 w-1 rounded-full shadow-xs"
+            />
+          </div>
         </div>
 
         <div className="flex flex-col justify-center">
